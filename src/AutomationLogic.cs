@@ -41,6 +41,7 @@ namespace KindleToPDF
 
         private const uint WM_KEYDOWN = 0x0100;
         private const uint WM_KEYUP = 0x0101;
+        private const int VK_LEFT = 0x25;
         private const int VK_RIGHT = 0x27;
         private const int VK_NEXT = 0x22; // PageDown
 
@@ -65,21 +66,21 @@ namespace KindleToPDF
             return Rectangle.Empty;
         }
 
-        public void SendPageTurn(IntPtr hWnd)
+        public void SendPageTurn(IntPtr hWnd, bool isRightToLeft)
         {
-            // Try sending Right Arrow key
-            // Note: PostMessage might not work for all apps. 
-            // If it fails, we might need SetForegroundWindow + SendKeys.SendWait
-            
+            // Right-to-Left (JP): Next page is LEFT Arrow
+            // Left-to-Right (EN): Next page is RIGHT Arrow
+            int key = isRightToLeft ? VK_LEFT : VK_RIGHT;
+
             // Method 1: PostMessage (Background friendly-ish)
-            PostMessage(hWnd, WM_KEYDOWN, (IntPtr)VK_RIGHT, IntPtr.Zero);
+            PostMessage(hWnd, WM_KEYDOWN, (IntPtr)key, IntPtr.Zero);
             Thread.Sleep(50);
-            PostMessage(hWnd, WM_KEYUP, (IntPtr)VK_RIGHT, IntPtr.Zero);
+            PostMessage(hWnd, WM_KEYUP, (IntPtr)key, IntPtr.Zero);
 
             // Fallback/Alternative: SetForeground and SendKeys (more reliable for Kindle)
             // SetForegroundWindow(hWnd);
             // Thread.Sleep(100);
-            // SendKeys.SendWait("{RIGHT}");
+            // SendKeys.SendWait(isRightToLeft ? "{LEFT}" : "{RIGHT}");
         }
 
         public Bitmap CaptureWindow(Rectangle bounds)

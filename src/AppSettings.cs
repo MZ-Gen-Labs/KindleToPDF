@@ -14,6 +14,7 @@ namespace KindleToPDF
         public bool StopAtLastPage { get; set; } = true;
         public bool AlwaysOnTop { get; set; } = true;
         public int DpiIndex { get; set; } = 0;
+        public int PageDirection { get; set; } = 0; // 0: R2L (JP), 1: L2R (EN)
         
         public int CropX { get; set; }
         public int CropY { get; set; }

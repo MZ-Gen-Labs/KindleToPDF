@@ -29,6 +29,8 @@ namespace KindleToPDF
         private CheckBox chkAlwaysOnTop;
         private Label lblDpi;
         private ComboBox cmbDpi;
+        private Label lblDirection;
+        private ComboBox cmbDirection;
         private TextBox txtLog;
         private Button btnSetCrop;
         private Button btnRefreshTitle;
@@ -70,6 +72,11 @@ namespace KindleToPDF
             if (_settings.DpiIndex >= 0 && _settings.DpiIndex < cmbDpi.Items.Count)
                 cmbDpi.SelectedIndex = _settings.DpiIndex;
             
+            if (_settings.PageDirection >= 0 && _settings.PageDirection < cmbDirection.Items.Count)
+                cmbDirection.SelectedIndex = _settings.PageDirection;
+            else
+                cmbDirection.SelectedIndex = 0; // Default R2L
+            
             _cropRect = _settings.CropRect;
             if (_cropRect != Rectangle.Empty)
             {
@@ -108,6 +115,7 @@ namespace KindleToPDF
             _settings.StopAtLastPage = chkStopAtLastPage.Checked;
             _settings.AlwaysOnTop = chkAlwaysOnTop.Checked;
             _settings.DpiIndex = cmbDpi.SelectedIndex;
+            _settings.PageDirection = cmbDirection.SelectedIndex;
             _settings.CropRect = _cropRect;
 
             _settings.Save();
@@ -155,6 +163,14 @@ namespace KindleToPDF
             cmbDpi.SelectedIndex = 0;
             this.Controls.Add(lblDpi);
             this.Controls.Add(cmbDpi);
+
+            y += 40;
+            lblDirection = new Label { Text = "Page Direction:", Location = new Point(20, y), AutoSize = true };
+            cmbDirection = new ComboBox { Location = new Point(150, y - 3), DropDownStyle = ComboBoxStyle.DropDownList, Width = 180 };
+            cmbDirection.Items.AddRange(new object[] { "Right to Left (JP)", "Left to Right (EN)" });
+            cmbDirection.SelectedIndex = 0;
+            this.Controls.Add(lblDirection);
+            this.Controls.Add(cmbDirection);
 
             y += 40;
             btnSetCrop = new Button { Text = "Set Crop Area", Location = new Point(20, y), Size = new Size(120, 30) };
@@ -354,6 +370,7 @@ namespace KindleToPDF
             if (!int.TryParse(txtPages.Text, out int maxPages)) maxPages = 10;
             bool autoDetect = chkAutoDetect.Checked;
             bool stopAtLast = chkStopAtLastPage.Checked;
+            bool isRightToLeft = cmbDirection.SelectedIndex == 0;
 
             if (_cts == null || _cts.IsCancellationRequested) _cts = new CancellationTokenSource();
             
@@ -374,7 +391,7 @@ namespace KindleToPDF
             try
             {
                 int startIndex = _capturedImages.Count;
-                await Task.Run(() => RunAutomation(kindleHandle, interval, maxPages, tempDir, autoDetect, stopAtLast, startIndex, _cts.Token));
+                await Task.Run(() => RunAutomation(kindleHandle, interval, maxPages, tempDir, autoDetect, stopAtLast, startIndex, _cts.Token, isRightToLeft));
             }
             catch (OperationCanceledException)
             {
@@ -494,7 +511,7 @@ namespace KindleToPDF
             btnAbort.Enabled = false;
         }
 
-        private void RunAutomation(IntPtr hWnd, int interval, int maxPages, string tempDir, bool autoDetect, bool stopAtLast, int startIndex, CancellationToken token)
+        private void RunAutomation(IntPtr hWnd, int interval, int maxPages, string tempDir, bool autoDetect, bool stopAtLast, int startIndex, CancellationToken token, bool isRightToLeft)
         {
             Bitmap previousImage = null;
             const int VK_DELETE = 0x2E;
@@ -555,7 +572,7 @@ namespace KindleToPDF
 
                 if (!stopAtLast && i >= maxPages - 1) break;
 
-                _automation.SendPageTurn(hWnd);
+                _automation.SendPageTurn(hWnd, isRightToLeft);
 
                 if (autoDetect)
                 {
