@@ -18,6 +18,9 @@ namespace KindleToPDF
 
         private Button btnStart;
         private Button btnStop;
+        private Button btnTop;
+        private Button btnPrev;
+        private Button btnNext;
         private Label lblInterval;
         private TextBox txtInterval;
         private Label lblPages;
@@ -171,6 +174,19 @@ namespace KindleToPDF
             cmbDirection.SelectedIndex = 0;
             this.Controls.Add(lblDirection);
             this.Controls.Add(cmbDirection);
+
+            y += 40;
+            btnTop = new Button { Text = "<< Top", Location = new Point(20, y), Size = new Size(80, 30) };
+            btnTop.Click += BtnTop_Click;
+            this.Controls.Add(btnTop);
+
+            btnPrev = new Button { Text = "< Prev", Location = new Point(110, y), Size = new Size(80, 30) };
+            btnPrev.Click += BtnPrev_Click;
+            this.Controls.Add(btnPrev);
+
+            btnNext = new Button { Text = "Next >", Location = new Point(200, y), Size = new Size(80, 30) };
+            btnNext.Click += BtnNext_Click;
+            this.Controls.Add(btnNext);
 
             y += 40;
             btnSetCrop = new Button { Text = "Set Crop Area", Location = new Point(20, y), Size = new Size(120, 30) };
@@ -500,6 +516,53 @@ namespace KindleToPDF
                 _capturedImages.Clear();
                 _cts?.Cancel(); // Ensure any running task is cancelled if this is called during run (though it's mostly for pause)
                 ResetUI();
+            }
+        }
+
+        private void BtnTop_Click(object sender, EventArgs e)
+        {
+            IntPtr kindleHandle = _automation.GetKindleWindow();
+            if (kindleHandle != IntPtr.Zero)
+            {
+                _automation.BringWindowToFront(kindleHandle);
+                _automation.SendHome(kindleHandle);
+                Log("Sent Home key.");
+            }
+            else
+            {
+                Log("Kindle window not found.");
+            }
+        }
+
+        private void BtnPrev_Click(object sender, EventArgs e)
+        {
+            IntPtr kindleHandle = _automation.GetKindleWindow();
+            if (kindleHandle != IntPtr.Zero)
+            {
+                _automation.BringWindowToFront(kindleHandle);
+                bool isRightToLeft = cmbDirection.SelectedIndex == 0;
+                _automation.SendPrevPage(kindleHandle, isRightToLeft);
+                Log("Sent Prev Page command.");
+            }
+            else
+            {
+                Log("Kindle window not found.");
+            }
+        }
+
+        private void BtnNext_Click(object sender, EventArgs e)
+        {
+            IntPtr kindleHandle = _automation.GetKindleWindow();
+            if (kindleHandle != IntPtr.Zero)
+            {
+                _automation.BringWindowToFront(kindleHandle);
+                bool isRightToLeft = cmbDirection.SelectedIndex == 0;
+                _automation.SendNextPage(kindleHandle, isRightToLeft);
+                Log("Sent Next Page command.");
+            }
+            else
+            {
+                Log("Kindle window not found.");
             }
         }
 

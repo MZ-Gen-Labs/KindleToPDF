@@ -43,6 +43,7 @@ namespace KindleToPDF
         private const uint WM_KEYUP = 0x0101;
         private const int VK_LEFT = 0x25;
         private const int VK_RIGHT = 0x27;
+        private const int VK_HOME = 0x24;
         private const int VK_NEXT = 0x22; // PageDown
 
         public IntPtr GetKindleWindow()
@@ -66,21 +67,50 @@ namespace KindleToPDF
             return Rectangle.Empty;
         }
 
+        public void SendKey(IntPtr hWnd, int key)
+        {
+            PostMessage(hWnd, WM_KEYDOWN, (IntPtr)key, IntPtr.Zero);
+            Thread.Sleep(50);
+            PostMessage(hWnd, WM_KEYUP, (IntPtr)key, IntPtr.Zero);
+        }
+
+        public void SendHome(IntPtr hWnd)
+        {
+            // "^{HOME}" didn't work.
+            // User suggested Ctrl+G -> 1 -> Enter
+            
+            // Send Ctrl+G
+            SendKeys.SendWait("^g");
+            
+            // Wait for dialog to appear (500ms should be enough)
+            Thread.Sleep(500);
+            
+            // Send "1"
+            SendKeys.SendWait("1");
+            
+            // Send Enter
+            SendKeys.SendWait("{ENTER}");
+        }
+
+        public void SendPrevPage(IntPtr hWnd, bool isRightToLeft)
+        {
+            // Right-to-Left (JP): Prev page is RIGHT Arrow
+            // Left-to-Right (EN): Prev page is LEFT Arrow
+            int key = isRightToLeft ? VK_RIGHT : VK_LEFT;
+            SendKey(hWnd, key);
+        }
+
+        public void SendNextPage(IntPtr hWnd, bool isRightToLeft)
+        {
+            SendPageTurn(hWnd, isRightToLeft);
+        }
+
         public void SendPageTurn(IntPtr hWnd, bool isRightToLeft)
         {
             // Right-to-Left (JP): Next page is LEFT Arrow
             // Left-to-Right (EN): Next page is RIGHT Arrow
             int key = isRightToLeft ? VK_LEFT : VK_RIGHT;
-
-            // Method 1: PostMessage (Background friendly-ish)
-            PostMessage(hWnd, WM_KEYDOWN, (IntPtr)key, IntPtr.Zero);
-            Thread.Sleep(50);
-            PostMessage(hWnd, WM_KEYUP, (IntPtr)key, IntPtr.Zero);
-
-            // Fallback/Alternative: SetForeground and SendKeys (more reliable for Kindle)
-            // SetForegroundWindow(hWnd);
-            // Thread.Sleep(100);
-            // SendKeys.SendWait(isRightToLeft ? "{LEFT}" : "{RIGHT}");
+            SendKey(hWnd, key);
         }
 
         public Bitmap CaptureWindow(Rectangle bounds)
