@@ -155,6 +155,16 @@ namespace KindleToPDF
             return target;
         }
 
+        public void BringWindowToFront(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            
+            // Restore if minimized
+            // ShowWindow(hWnd, SW_RESTORE); // Need PInvoke for ShowWindow if we want to handle minimized state properly
+            
+            SetForegroundWindow(hWnd);
+        }
+
         public string GetBookTitleFromWindow(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero) return null;

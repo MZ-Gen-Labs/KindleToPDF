@@ -82,6 +82,7 @@ namespace KindleToPDF
             IntPtr kindleHandle = _automation.GetKindleWindow();
             if (kindleHandle != IntPtr.Zero)
             {
+                _automation.BringWindowToFront(kindleHandle); // Bring Kindle to front
                 string bookTitle = _automation.GetBookTitleFromWindow(kindleHandle);
                 if (!string.IsNullOrEmpty(bookTitle))
                 {
