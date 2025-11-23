@@ -438,9 +438,20 @@ namespace KindleToPDF
             }
         }
 
-        private void BtnStop_Click(object sender, EventArgs e)
+        private async void BtnStop_Click(object sender, EventArgs e)
         {
-            _cts?.Cancel();
+            if (btnStart.Text == "Resume")
+            {
+                Log("Stopping from paused state...");
+                await FinalizePdf();
+                btnStart.Text = "Start";
+                btnStart.Enabled = true;
+                btnStop.Enabled = false;
+            }
+            else
+            {
+                _cts?.Cancel();
+            }
         }
 
         private void RunAutomation(IntPtr hWnd, int interval, int maxPages, string tempDir, bool autoDetect, bool stopAtLast, int startIndex, CancellationToken token)
