@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text.Json;
@@ -8,6 +9,10 @@ namespace KindleToPDF
 {
     public class AppSettings
     {
+        public AppSettings()
+        {
+            EnsurePatterns();
+        }
         public int Interval { get; set; } = 1000;
         public int PageCount { get; set; } = 10;
         public bool AutoDetect { get; set; } = true;
@@ -16,22 +21,51 @@ namespace KindleToPDF
         public int DpiIndex { get; set; } = 0;
         public int PageDirection { get; set; } = 0; // 0: R2L (JP), 1: L2R (EN)
         
-        public int CropX { get; set; }
-        public int CropY { get; set; }
-        public int CropW { get; set; }
-        public int CropH { get; set; }
+        public List<Rectangle> CropPatterns { get; set; } = new List<Rectangle>();
+        public int SelectedPatternIndex { get; set; } = 0;
+        public int MaxPatterns { get; set; } = 5;
 
         [JsonIgnore]
         public Rectangle CropRect
         {
-            get => new Rectangle(CropX, CropY, CropW, CropH);
+            get 
+            {
+                EnsurePatterns();
+                if (SelectedPatternIndex >= 0 && SelectedPatternIndex < CropPatterns.Count)
+                {
+                    return CropPatterns[SelectedPatternIndex];
+                }
+                return Rectangle.Empty;
+            }
             set
             {
-                CropX = value.X;
-                CropY = value.Y;
-                CropW = value.Width;
-                CropH = value.Height;
+                EnsurePatterns();
+                if (SelectedPatternIndex >= 0 && SelectedPatternIndex < CropPatterns.Count)
+                {
+                    CropPatterns[SelectedPatternIndex] = value;
+                }
             }
+        }
+
+        public void EnsurePatterns()
+        {
+            if (CropPatterns == null) CropPatterns = new List<Rectangle>();
+            
+            // Resize if needed based on MaxPatterns
+            // Actually, we should probably respect MaxPatterns but also ensure we have enough slots up to MaxPatterns
+            // If MaxPatterns increases, we add. If decreases, we might remove? Or just keep them but UI limits selection?
+            // Let's keep it simple: Ensure we have at least MaxPatterns elements.
+            
+            while (CropPatterns.Count < MaxPatterns)
+            {
+                CropPatterns.Add(Rectangle.Empty);
+            }
+            
+            // If we have more than MaxPatterns, should we trim? Maybe not, to avoid data loss if user accidentally lowers count.
+            // But for the UI logic, we will limit selection to MaxPatterns.
+            
+            if (SelectedPatternIndex >= MaxPatterns) SelectedPatternIndex = MaxPatterns - 1;
+            if (SelectedPatternIndex < 0) SelectedPatternIndex = 0;
         }
 
         private static string SettingsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
@@ -43,7 +77,9 @@ namespace KindleToPDF
                 if (File.Exists(SettingsPath))
                 {
                     string json = File.ReadAllText(SettingsPath);
-                    return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+                    var settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+                    settings.EnsurePatterns();
+                    return settings;
                 }
             }
             catch 

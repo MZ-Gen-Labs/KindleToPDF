@@ -39,6 +39,8 @@ namespace KindleToPDF
         private TextBox txtLog = null!;
         private Button btnSetCrop = null!;
         private Button btnRefreshTitle = null!;
+        private ComboBox cmbCropPatterns = null!;
+        private NumericUpDown numMaxPatterns = null!;
         private Label lblCropLeft = null!, lblCropTop = null!, lblCropRight = null!, lblCropBottom = null!;
         private TextBox txtCropLeft = null!, txtCropTop = null!, txtCropRight = null!, txtCropBottom = null!;
         private Label lblCropLeftMax = null!, lblCropTopMax = null!, lblCropRightMax = null!, lblCropBottomMax = null!;
@@ -87,6 +89,20 @@ namespace KindleToPDF
             {
                 Log($"Loaded crop area: {_cropRect}");
             }
+            // Initialize Pattern UI
+            numMaxPatterns.Value = _settings.MaxPatterns;
+            UpdatePatternComboBox();
+            if (_settings.SelectedPatternIndex >= 0 && _settings.SelectedPatternIndex < cmbCropPatterns.Items.Count)
+            {
+                cmbCropPatterns.SelectedIndex = _settings.SelectedPatternIndex;
+            }
+            else
+            {
+                cmbCropPatterns.SelectedIndex = 0;
+            }
+            
+            // Load initial crop rect
+            _cropRect = _settings.CropRect;
             UpdateCropTextBoxes();
             UpdateCropLimitLabels();
 
@@ -225,6 +241,21 @@ namespace KindleToPDF
             this.Controls.Add(btnSetCrop);
 
             y += 40;
+            Label lblPattern = new Label { Text = "Pattern:", Location = new Point(20, y), AutoSize = true };
+            this.Controls.Add(lblPattern);
+
+            cmbCropPatterns = new ComboBox { Location = new Point(80, y - 3), Width = 100, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbCropPatterns.SelectedIndexChanged += CmbCropPatterns_SelectedIndexChanged;
+            this.Controls.Add(cmbCropPatterns);
+
+            Label lblMaxPatterns = new Label { Text = "Max:", Location = new Point(200, y), AutoSize = true };
+            this.Controls.Add(lblMaxPatterns);
+
+            numMaxPatterns = new NumericUpDown { Location = new Point(240, y - 3), Width = 50, Minimum = 1, Maximum = 20, Value = 5 };
+            numMaxPatterns.ValueChanged += NumMaxPatterns_ValueChanged;
+            this.Controls.Add(numMaxPatterns);
+
+            y += 30;
             Label lblCrop = new Label { Text = "Crop (px):", Location = new Point(20, y), AutoSize = true };
             this.Controls.Add(lblCrop);
             
@@ -305,6 +336,7 @@ namespace KindleToPDF
                 if (overlay.ShowDialog() == DialogResult.OK)
                 {
                     _cropRect = overlay.CropRect;
+                    _settings.CropRect = _cropRect; // Sync to current pattern
                     Log($"Crop area set: {_cropRect}");
                     UpdateCropTextBoxes();
                     _guidelineOverlay?.UpdateCropRect(_cropRect);
@@ -349,6 +381,7 @@ namespace KindleToPDF
                 int.TryParse(txtCropBottom.Text, out int bottom))
             {
                 _cropRect = new Rectangle(left, top, right - left, bottom - top);
+                _settings.CropRect = _cropRect; // Sync to current pattern
                 _guidelineOverlay?.UpdateCropRect(_cropRect);
                 Log($"Crop area updated from numeric input: {_cropRect}");
             }
@@ -381,6 +414,47 @@ namespace KindleToPDF
             lblCropTopMax.Text = "0";
             lblCropRightMax.Text = screenBounds.Width.ToString();
             lblCropBottomMax.Text = screenBounds.Height.ToString();
+        }
+
+        private void CmbCropPatterns_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (cmbCropPatterns.SelectedIndex < 0) return;
+
+            // Save current to settings (actually it's already saved via property setter if we kept them in sync)
+            // But we need to switch the index in settings
+            _settings.SelectedPatternIndex = cmbCropPatterns.SelectedIndex;
+            
+            // Load new rect
+            _cropRect = _settings.CropRect;
+            UpdateCropTextBoxes();
+            _guidelineOverlay?.UpdateCropRect(_cropRect);
+            Log($"Switched to Pattern {cmbCropPatterns.SelectedIndex + 1}: {_cropRect}");
+        }
+
+        private void NumMaxPatterns_ValueChanged(object? sender, EventArgs e)
+        {
+            _settings.MaxPatterns = (int)numMaxPatterns.Value;
+            _settings.EnsurePatterns();
+            UpdatePatternComboBox();
+        }
+
+        private void UpdatePatternComboBox()
+        {
+            int currentSel = cmbCropPatterns.SelectedIndex;
+            cmbCropPatterns.Items.Clear();
+            for (int i = 0; i < _settings.MaxPatterns; i++)
+            {
+                cmbCropPatterns.Items.Add($"Pattern {i + 1}");
+            }
+            
+            if (currentSel >= 0 && currentSel < cmbCropPatterns.Items.Count)
+            {
+                cmbCropPatterns.SelectedIndex = currentSel;
+            }
+            else if (cmbCropPatterns.Items.Count > 0)
+            {
+                cmbCropPatterns.SelectedIndex = 0;
+            }
         }
 
         private async void BtnStart_Click(object? sender, EventArgs e)
