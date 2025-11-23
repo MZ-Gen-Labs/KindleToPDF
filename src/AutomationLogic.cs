@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using System.Windows.Automation;
 
 namespace KindleToPDF
 {
@@ -45,6 +46,7 @@ namespace KindleToPDF
         private const int VK_RIGHT = 0x27;
         private const int VK_HOME = 0x24;
         private const int VK_NEXT = 0x22; // PageDown
+        private const int VK_F11 = 0x7A;
 
         public IntPtr GetKindleWindow()
         {
@@ -90,6 +92,11 @@ namespace KindleToPDF
             
             // Send Enter
             SendKeys.SendWait("{ENTER}");
+        }
+
+        public void ToggleFullScreen(IntPtr hWnd)
+        {
+            SendKey(hWnd, VK_F11);
         }
 
         public void SendPrevPage(IntPtr hWnd, bool isRightToLeft)
@@ -225,6 +232,98 @@ namespace KindleToPDF
             }
 
             return null;
+        }
+        public int GetTotalPageCount(IntPtr kindleWnd)
+        {
+            // 1. Open "Go to" dialog
+            BringWindowToFront(kindleWnd);
+            SendKeys.SendWait("^g");
+            Thread.Sleep(800); // Wait for dialog
+
+            // 2. Find the dialog
+            // We can try to find the dialog window using UIA
+            // The dialog usually has a specific title like "移動..." or "Go to..."
+            // Or we can just search for a new window under the Kindle process/root
+            
+            try
+            {
+                AutomationElement root = AutomationElement.RootElement;
+                // Optimization: We could scope this to the Kindle window if we had its AutomationElement, 
+                // but FromHandle might be safer.
+                
+                // Let's try to find the dialog. It should be a Window control type.
+                // Since we don't know the exact title (lang dependent), we might look for a modal window 
+                // or just the focused window?
+                
+                // Strategy: Get the focused element. It should be the text box in the dialog.
+                AutomationElement focused = AutomationElement.FocusedElement;
+                if (focused == null) return -1;
+
+                // The focused element is likely the TextBox ("位置No.").
+                // We need to find the label next to it, or the parent window and then the label.
+                
+                AutomationElement dialog = focused;
+                while (dialog != null && dialog.Current.ControlType != ControlType.Window)
+                {
+                    dialog = TreeWalker.ControlViewWalker.GetParent(dialog);
+                }
+                
+                if (dialog == null) return -1;
+
+                // Now search for text elements in this dialog
+                Condition condition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text);
+                AutomationElementCollection textElements = dialog.FindAll(TreeScope.Descendants, condition);
+
+                foreach (AutomationElement element in textElements)
+                {
+                    string name = element.Current.Name;
+                    // Look for format like "/ 136" or "/136"
+                    if (name.Contains("/"))
+                    {
+                        string[] parts = name.Split('/');
+                        if (parts.Length > 1)
+                        {
+                            string numberPart = parts[1].Trim();
+                            // Remove any non-digit chars just in case
+                            string digits = new string(Array.FindAll(numberPart.ToCharArray(), char.IsDigit));
+                            if (int.TryParse(digits, out int total))
+                            {
+                                // Close dialog
+                                SendKeys.SendWait("{ESC}");
+                                return total;
+                            }
+                        }
+                    }
+                }
+                
+                // If parsing failed, close dialog
+                SendKeys.SendWait("{ESC}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("UIA Error: " + ex.Message);
+                SendKeys.SendWait("{ESC}"); // Ensure closed
+            }
+
+            return -1;
+        }
+
+        public void GoToLastPage(IntPtr kindleWnd)
+        {
+            int totalPages = GetTotalPageCount(kindleWnd);
+            if (totalPages > 0)
+            {
+                Thread.Sleep(500); // Wait for dialog to close completely
+                
+                // Open dialog again
+                BringWindowToFront(kindleWnd);
+                SendKeys.SendWait("^g");
+                Thread.Sleep(500);
+                
+                // Input last page
+                SendKeys.SendWait(totalPages.ToString());
+                SendKeys.SendWait("{ENTER}");
+            }
         }
     }
 }

@@ -21,6 +21,8 @@ namespace KindleToPDF
         private Button btnTop;
         private Button btnPrev;
         private Button btnNext;
+        private Button btnBottom;
+        private Button btnFullScreen;
         private Label lblInterval;
         private TextBox txtInterval;
         private Label lblPages;
@@ -134,27 +136,47 @@ namespace KindleToPDF
             this.Text = "Kindle to PDF Automation";
 
             int y = 20;
-            
+
+            // 1. Auto-detect Page Turn (Moved up)
+            chkAutoDetect = new CheckBox { Text = "Auto-detect Page Turn", Location = new Point(20, y), AutoSize = true, Checked = true };
+            chkAutoDetect.CheckedChanged += (s, e) => 
+            {
+                txtInterval.Enabled = !chkAutoDetect.Checked;
+                lblInterval.Enabled = !chkAutoDetect.Checked;
+            };
+            this.Controls.Add(chkAutoDetect);
+
+            y += 30;
+            // 2. Interval (Moved down)
             lblInterval = new Label { Text = "Interval (ms):", Location = new Point(20, y), AutoSize = true };
             txtInterval = new TextBox { Text = "1000", Location = new Point(150, y - 3) };
+            // Initialize enabled state
+            txtInterval.Enabled = !chkAutoDetect.Checked;
+            lblInterval.Enabled = !chkAutoDetect.Checked;
             this.Controls.Add(lblInterval);
             this.Controls.Add(txtInterval);
 
             y += 40;
+            // 3. Stop at Last Page (Moved up)
+            chkStopAtLastPage = new CheckBox { Text = "Stop at Last Page", Location = new Point(20, y), AutoSize = true, Checked = true };
+            chkStopAtLastPage.CheckedChanged += (s, e) =>
+            {
+                txtPages.Enabled = !chkStopAtLastPage.Checked;
+                lblPages.Enabled = !chkStopAtLastPage.Checked;
+            };
+            this.Controls.Add(chkStopAtLastPage);
+
+            y += 30;
+            // 4. Page Count (Moved down)
             lblPages = new Label { Text = "Page Count:", Location = new Point(20, y), AutoSize = true };
             txtPages = new TextBox { Text = "10", Location = new Point(150, y - 3) };
+            // Initialize enabled state
+            txtPages.Enabled = !chkStopAtLastPage.Checked;
+            lblPages.Enabled = !chkStopAtLastPage.Checked;
             this.Controls.Add(lblPages);
             this.Controls.Add(txtPages);
 
             y += 40;
-            chkAutoDetect = new CheckBox { Text = "Auto-detect Page Turn", Location = new Point(20, y), AutoSize = true, Checked = true };
-            this.Controls.Add(chkAutoDetect);
-
-            y += 30;
-            chkStopAtLastPage = new CheckBox { Text = "Stop at Last Page", Location = new Point(20, y), AutoSize = true, Checked = true };
-            this.Controls.Add(chkStopAtLastPage);
-
-            y += 30;
             chkAlwaysOnTop = new CheckBox { Text = "Always on Top", Location = new Point(20, y), AutoSize = true, Checked = true };
             chkAlwaysOnTop.CheckedChanged += (s, e) => { this.TopMost = chkAlwaysOnTop.Checked; };
             this.Controls.Add(chkAlwaysOnTop);
@@ -187,6 +209,15 @@ namespace KindleToPDF
             btnNext = new Button { Text = "Next >", Location = new Point(200, y), Size = new Size(80, 30) };
             btnNext.Click += BtnNext_Click;
             this.Controls.Add(btnNext);
+
+            btnFullScreen = new Button { Text = "Full Screen", Location = new Point(290, y), Size = new Size(80, 30) };
+            btnFullScreen.Click += BtnFullScreen_Click;
+            this.Controls.Add(btnFullScreen);
+
+            y += 40;
+            btnBottom = new Button { Text = ">> Bottom", Location = new Point(20, y), Size = new Size(80, 30) };
+            btnBottom.Click += BtnBottom_Click;
+            this.Controls.Add(btnBottom);
 
             y += 40;
             btnSetCrop = new Button { Text = "Set Crop Area", Location = new Point(20, y), Size = new Size(120, 30) };
@@ -559,6 +590,48 @@ namespace KindleToPDF
                 bool isRightToLeft = cmbDirection.SelectedIndex == 0;
                 _automation.SendNextPage(kindleHandle, isRightToLeft);
                 Log("Sent Next Page command.");
+            }
+            else
+            {
+                Log("Kindle window not found.");
+            }
+        }
+
+        private void BtnFullScreen_Click(object sender, EventArgs e)
+        {
+            IntPtr kindleHandle = _automation.GetKindleWindow();
+            if (kindleHandle != IntPtr.Zero)
+            {
+                _automation.BringWindowToFront(kindleHandle);
+                _automation.ToggleFullScreen(kindleHandle);
+                Log("Toggled Full Screen (F11).");
+            }
+            else
+            {
+                Log("Kindle window not found.");
+            }
+        }
+
+        private void BtnBottom_Click(object sender, EventArgs e)
+        {
+            IntPtr kindleHandle = _automation.GetKindleWindow();
+            if (kindleHandle != IntPtr.Zero)
+            {
+                _automation.BringWindowToFront(kindleHandle);
+                Log("Attempting to go to last page...");
+                // Run in task to avoid freezing UI during UIA operations
+                Task.Run(() => 
+                {
+                    try
+                    {
+                        _automation.GoToLastPage(kindleHandle);
+                        Invoke(new Action(() => Log("Sent Go to Last Page command.")));
+                    }
+                    catch (Exception ex)
+                    {
+                        Invoke(new Action(() => Log($"Error navigating to last page: {ex.Message}")));
+                    }
+                });
             }
             else
             {
