@@ -210,9 +210,13 @@ namespace KindleToPDF
             btnStart.Click += BtnStart_Click;
             this.Controls.Add(btnStart);
 
-            btnStop = new Button { Text = "Stop", Location = new Point(200, y), Size = new Size(100, 40), Enabled = false };
+            btnStop = new Button { Text = "Stop", Location = new Point(160, y), Size = new Size(100, 40), Enabled = false };
             btnStop.Click += BtnStop_Click;
             this.Controls.Add(btnStop);
+
+            btnAbort = new Button { Text = "Abort", Location = new Point(270, y), Size = new Size(80, 40), Enabled = false, BackColor = Color.LightPink };
+            btnAbort.Click += BtnAbort_Click;
+            this.Controls.Add(btnAbort);
 
             y += 60;
             txtLog = new TextBox { Multiline = true, ScrollBars = ScrollBars.Vertical, Location = new Point(20, y), Size = new Size(340, 150), ReadOnly = true };
@@ -357,6 +361,7 @@ namespace KindleToPDF
 
             btnStart.Enabled = false;
             btnStop.Enabled = true;
+            btnAbort.Enabled = true;
             Log("Starting automation... Press DELETE to pause.");
 
             // Hide guideline overlay during capture
@@ -388,11 +393,32 @@ namespace KindleToPDF
                 
                 if (_cts.IsCancellationRequested)
                 {
-                    // Stopped manually via Stop button
-                    await FinalizePdf();
-                    btnStart.Text = "Start";
-                    btnStart.Enabled = true;
-                    btnStop.Enabled = false;
+                    // Stopped manually via Stop button (or Abort, but Abort handles UI reset itself if called from UI thread... wait, if Abort cancels token, we come here)
+                    // If Abort was clicked, we might have already cleared images.
+                    
+                    if (btnAbort.Enabled && _capturedImages.Count == 0) 
+                    {
+                         // Likely aborted. UI reset is handled by BtnAbort_Click? 
+                         // No, BtnAbort_Click calls ResetUI.
+                         // But if we are in this finally block, we might overwrite UI state?
+                         // Let's check if we are already reset?
+                         if (btnStart.Text == "Start" && btnStart.Enabled) 
+                         {
+                             // Already reset, do nothing
+                         }
+                         else
+                         {
+                             // Stopped manually via Stop button
+                             await FinalizePdf();
+                             ResetUI();
+                         }
+                    }
+                    else
+                    {
+                         // Stopped manually via Stop button
+                         await FinalizePdf();
+                         ResetUI();
+                    }
                 }
                 else
                 {
@@ -401,42 +427,38 @@ namespace KindleToPDF
                     {
                         // Finished normally (page count reached)
                         await FinalizePdf();
-                        btnStart.Text = "Start";
-                        btnStart.Enabled = true;
-                        btnStop.Enabled = false;
+                        ResetUI();
                     }
                     else if (stopAtLast && _capturedImages.Count > 0) // Heuristic for stopAtLast finish
                     {
-                         // If we broke out due to stopAtLast, we should finalize.
-                         // But how do we distinguish Pause vs StopAtLast?
-                         // Automation loop breaks on both.
-                         // Let's check if ESC was pressed? No, loop is done.
-                         // We can check if we are "done" by checking if we reached the end condition.
-                         // Actually, if we are here and NOT cancelled, it means we either finished pages OR stopped at last page OR paused via ESC break.
-                         // Wait, my RunAutomation breaks on ESC.
+                         // Paused or Finished logic...
+                         // If we are here, we are NOT cancelled.
+                         // If we detected last page, we actually cancel the token inside RunAutomation now?
+                         // Let's check RunAutomation logic.
+                         // Yes: _cts.Cancel(); break;
+                         // So if last page detected, we go to "if (_cts.IsCancellationRequested)" block above.
                          
-                         // Let's check key state again? No.
-                         // Let's use a flag or return value from RunAutomation.
-                         // For now, let's assume if we broke loop and NOT cancelled, it's Pause, UNLESS we detected last page.
-                         // I'll add a "Paused" log in RunAutomation to be sure?
-                         // Or better: Check if ESC is down? No.
+                         // So if we are here, it means we broke loop via DELETE key (Pause).
                          
-                         // Let's just show Resume button. If user is actually done, they can click Stop.
-                         Log("Paused or Finished. Press Resume to continue, or Stop to finish.");
+                         Log("Paused. Press Resume to continue, Stop to finish, or Abort to discard.");
                          btnStart.Text = "Resume";
                          btnStart.Enabled = true;
                          btnStop.Enabled = true;
+                         btnAbort.Enabled = true;
                     }
                     else
                     {
-                        Log("Paused. Press Resume to continue, or Stop to finish.");
+                        Log("Paused. Press Resume to continue, Stop to finish, or Abort to discard.");
                         btnStart.Text = "Resume";
                         btnStart.Enabled = true;
                         btnStop.Enabled = true;
+                        btnAbort.Enabled = true;
                     }
                 }
             }
         }
+
+        private Button btnAbort;
 
         private async void BtnStop_Click(object sender, EventArgs e)
         {
@@ -444,14 +466,31 @@ namespace KindleToPDF
             {
                 Log("Stopping from paused state...");
                 await FinalizePdf();
-                btnStart.Text = "Start";
-                btnStart.Enabled = true;
-                btnStop.Enabled = false;
+                ResetUI();
             }
             else
             {
                 _cts?.Cancel();
             }
+        }
+
+        private void BtnAbort_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to abort? All captured images will be discarded.", "Confirm Abort", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            {
+                Log("Aborted by user. Discarding captured images.");
+                _capturedImages.Clear();
+                _cts?.Cancel(); // Ensure any running task is cancelled if this is called during run (though it's mostly for pause)
+                ResetUI();
+            }
+        }
+
+        private void ResetUI()
+        {
+            btnStart.Text = "Start";
+            btnStart.Enabled = true;
+            btnStop.Enabled = false;
+            btnAbort.Enabled = false;
         }
 
         private void RunAutomation(IntPtr hWnd, int interval, int maxPages, string tempDir, bool autoDetect, bool stopAtLast, int startIndex, CancellationToken token)
