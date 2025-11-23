@@ -11,41 +11,41 @@ namespace KindleToPDF
 {
     public partial class Form1 : Form
     {
-        private AutomationLogic _automation;
-        private PdfGenerator _pdfGenerator;
-        private CancellationTokenSource _cts;
-        private List<string> _capturedImages;
+        private AutomationLogic _automation = null!;
+        private PdfGenerator _pdfGenerator = null!;
+        private CancellationTokenSource _cts = null!;
+        private List<string> _capturedImages = null!;
 
-        private Button btnStart;
-        private Button btnStop;
-        private Button btnTop;
-        private Button btnPrev;
-        private Button btnNext;
-        private Button btnBottom;
-        private Button btnFullScreen;
-        private Label lblInterval;
-        private TextBox txtInterval;
-        private Label lblPages;
-        private TextBox txtPages;
-        private Label lblOutput;
-        private TextBox txtOutput;
-        private CheckBox chkAutoDetect;
-        private CheckBox chkStopAtLastPage;
-        private CheckBox chkAlwaysOnTop;
-        private Label lblDpi;
-        private ComboBox cmbDpi;
-        private Label lblDirection;
-        private ComboBox cmbDirection;
-        private TextBox txtLog;
-        private Button btnSetCrop;
-        private Button btnRefreshTitle;
-        private Label lblCropLeft, lblCropTop, lblCropRight, lblCropBottom;
-        private TextBox txtCropLeft, txtCropTop, txtCropRight, txtCropBottom;
-        private Label lblCropLeftMax, lblCropTopMax, lblCropRightMax, lblCropBottomMax;
+        private Button btnStart = null!;
+        private Button btnStop = null!;
+        private Button btnTop = null!;
+        private Button btnPrev = null!;
+        private Button btnNext = null!;
+        private Button btnBottom = null!;
+        private Button btnFullScreen = null!;
+        private Label lblInterval = null!;
+        private TextBox txtInterval = null!;
+        private Label lblPages = null!;
+        private TextBox txtPages = null!;
+        private Label lblOutput = null!;
+        private TextBox txtOutput = null!;
+        private CheckBox chkAutoDetect = null!;
+        private CheckBox chkStopAtLastPage = null!;
+        private CheckBox chkAlwaysOnTop = null!;
+        private Label lblDpi = null!;
+        private ComboBox cmbDpi = null!;
+        private Label lblDirection = null!;
+        private ComboBox cmbDirection = null!;
+        private TextBox txtLog = null!;
+        private Button btnSetCrop = null!;
+        private Button btnRefreshTitle = null!;
+        private Label lblCropLeft = null!, lblCropTop = null!, lblCropRight = null!, lblCropBottom = null!;
+        private TextBox txtCropLeft = null!, txtCropTop = null!, txtCropRight = null!, txtCropBottom = null!;
+        private Label lblCropLeftMax = null!, lblCropTopMax = null!, lblCropRightMax = null!, lblCropBottomMax = null!;
         private Rectangle _cropRect = Rectangle.Empty;
-        private GuidelineOverlay _guidelineOverlay;
+        private GuidelineOverlay _guidelineOverlay = null!;
 
-        private AppSettings _settings;
+        private AppSettings _settings = null!;
 
         public Form1()
         {
@@ -95,7 +95,7 @@ namespace KindleToPDF
             if (kindleHandle != IntPtr.Zero)
             {
                 _automation.BringWindowToFront(kindleHandle); // Bring Kindle to front
-                string bookTitle = _automation.GetBookTitleFromWindow(kindleHandle);
+                string? bookTitle = _automation.GetBookTitleFromWindow(kindleHandle);
                 if (!string.IsNullOrEmpty(bookTitle))
                 {
                     txtOutput.Text = bookTitle + ".pdf";
@@ -112,7 +112,7 @@ namespace KindleToPDF
             }
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        private void Form1_FormClosing(object? sender, FormClosingEventArgs e)
         {
             if (int.TryParse(txtInterval.Text, out int interval)) _settings.Interval = interval;
             if (int.TryParse(txtPages.Text, out int pages)) _settings.PageCount = pages;
@@ -297,7 +297,7 @@ namespace KindleToPDF
             txtLog.AppendText($"{DateTime.Now:HH:mm:ss} - {message}{Environment.NewLine}");
         }
 
-        private void BtnSetCrop_Click(object sender, EventArgs e)
+        private void BtnSetCrop_Click(object? sender, EventArgs e)
         {
             this.Hide();
             using (OverlayForm overlay = new OverlayForm(_cropRect))
@@ -313,7 +313,7 @@ namespace KindleToPDF
             this.Show();
         }
 
-        private void BtnRefreshTitle_Click(object sender, EventArgs e)
+        private void BtnRefreshTitle_Click(object? sender, EventArgs e)
         {
             IntPtr kindleHandle = _automation.GetKindleWindow();
             if (kindleHandle == IntPtr.Zero)
@@ -323,7 +323,7 @@ namespace KindleToPDF
                 return;
             }
 
-            string bookTitle = _automation.GetBookTitleFromWindow(kindleHandle);
+            string? bookTitle = _automation.GetBookTitleFromWindow(kindleHandle);
             if (!string.IsNullOrEmpty(bookTitle))
             {
                 txtOutput.Text = bookTitle + ".pdf";
@@ -339,7 +339,7 @@ namespace KindleToPDF
 
         private bool _updatingCropTextBoxes = false;
 
-        private void TxtCrop_TextChanged(object sender, EventArgs e)
+        private void TxtCrop_TextChanged(object? sender, EventArgs e)
         {
             if (_updatingCropTextBoxes) return;
 
@@ -376,14 +376,14 @@ namespace KindleToPDF
 
         private void UpdateCropLimitLabels()
         {
-            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            Rectangle screenBounds = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
             lblCropLeftMax.Text = "0";
             lblCropTopMax.Text = "0";
             lblCropRightMax.Text = screenBounds.Width.ToString();
             lblCropBottomMax.Text = screenBounds.Height.ToString();
         }
 
-        private async void BtnStart_Click(object sender, EventArgs e)
+        private async void BtnStart_Click(object? sender, EventArgs e)
         {
             if (btnStart.Text == "Resume")
             {
@@ -405,7 +405,7 @@ namespace KindleToPDF
             // Get book title and set as default PDF filename (only on first start, not resume)
             if (btnStart.Text != "Resume")
             {
-                string bookTitle = _automation.GetBookTitleFromWindow(kindleHandle);
+                string? bookTitle = _automation.GetBookTitleFromWindow(kindleHandle);
                 if (!string.IsNullOrEmpty(bookTitle))
                 {
                     txtOutput.Text = bookTitle + ".pdf";
@@ -523,9 +523,9 @@ namespace KindleToPDF
             }
         }
 
-        private Button btnAbort;
+        private Button btnAbort = null!;
 
-        private async void BtnStop_Click(object sender, EventArgs e)
+        private async void BtnStop_Click(object? sender, EventArgs e)
         {
             if (btnStart.Text == "Resume")
             {
@@ -539,7 +539,7 @@ namespace KindleToPDF
             }
         }
 
-        private void BtnAbort_Click(object sender, EventArgs e)
+        private void BtnAbort_Click(object? sender, EventArgs e)
         {
             if (MessageBox.Show("Are you sure you want to abort? All captured images will be discarded.", "Confirm Abort", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
@@ -550,7 +550,7 @@ namespace KindleToPDF
             }
         }
 
-        private void BtnTop_Click(object sender, EventArgs e)
+        private void BtnTop_Click(object? sender, EventArgs e)
         {
             IntPtr kindleHandle = _automation.GetKindleWindow();
             if (kindleHandle != IntPtr.Zero)
@@ -565,7 +565,7 @@ namespace KindleToPDF
             }
         }
 
-        private void BtnPrev_Click(object sender, EventArgs e)
+        private void BtnPrev_Click(object? sender, EventArgs e)
         {
             IntPtr kindleHandle = _automation.GetKindleWindow();
             if (kindleHandle != IntPtr.Zero)
@@ -581,7 +581,7 @@ namespace KindleToPDF
             }
         }
 
-        private void BtnNext_Click(object sender, EventArgs e)
+        private void BtnNext_Click(object? sender, EventArgs e)
         {
             IntPtr kindleHandle = _automation.GetKindleWindow();
             if (kindleHandle != IntPtr.Zero)
@@ -597,7 +597,7 @@ namespace KindleToPDF
             }
         }
 
-        private void BtnFullScreen_Click(object sender, EventArgs e)
+        private void BtnFullScreen_Click(object? sender, EventArgs e)
         {
             IntPtr kindleHandle = _automation.GetKindleWindow();
             if (kindleHandle != IntPtr.Zero)
@@ -612,7 +612,7 @@ namespace KindleToPDF
             }
         }
 
-        private void BtnBottom_Click(object sender, EventArgs e)
+        private void BtnBottom_Click(object? sender, EventArgs e)
         {
             IntPtr kindleHandle = _automation.GetKindleWindow();
             if (kindleHandle != IntPtr.Zero)
@@ -649,7 +649,7 @@ namespace KindleToPDF
 
         private void RunAutomation(IntPtr hWnd, int interval, int maxPages, string tempDir, bool autoDetect, bool stopAtLast, int startIndex, CancellationToken token, bool isRightToLeft)
         {
-            Bitmap previousImage = null;
+            Bitmap? previousImage = null;
             const int VK_DELETE = 0x2E;
 
             for (int i = startIndex; i < maxPages || stopAtLast; i++)
@@ -715,7 +715,7 @@ namespace KindleToPDF
                     bool pageChanged = false;
                     int maxRetries = 40; 
                     int stableCount = 0;
-                    Bitmap lastCheck = null;
+                    Bitmap? lastCheck = null;
 
                     for (int r = 0; r < maxRetries; r++)
                     {
@@ -785,7 +785,7 @@ namespace KindleToPDF
             if (string.IsNullOrWhiteSpace(outputPath)) outputPath = "output.pdf";
 
             double dpi = 0;
-            string dpiStr = (string)Invoke(new Func<string>(() => cmbDpi.SelectedItem.ToString()));
+            string dpiStr = (string)(Invoke(new Func<string>(() => cmbDpi.SelectedItem?.ToString() ?? "Default")) ?? "Default");
             if (dpiStr != "Default" && double.TryParse(dpiStr, out double d)) dpi = d;
 
             await Task.Run(() => _pdfGenerator.CreatePdf(_capturedImages, outputPath, dpi));

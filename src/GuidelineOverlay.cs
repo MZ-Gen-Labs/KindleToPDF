@@ -34,7 +34,7 @@ namespace KindleToPDF
             this.Paint += GuidelineOverlay_Paint;
         }
 
-        private void GuidelineOverlay_Load(object sender, EventArgs e)
+        private void GuidelineOverlay_Load(object? sender, EventArgs e)
         {
             // Make the form click-through
             int exStyle = GetWindowLong(this.Handle, GWL_EXSTYLE);
@@ -47,14 +47,14 @@ namespace KindleToPDF
             this.Invalidate();
         }
 
-        private void GuidelineOverlay_Paint(object sender, PaintEventArgs e)
+        private void GuidelineOverlay_Paint(object? sender, PaintEventArgs e)
         {
             if (_cropRect == Rectangle.Empty) return;
 
             Graphics g = e.Graphics;
             using (Pen pen = new Pen(Color.Red, 2))
             {
-                Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+                Rectangle screenBounds = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
                 
                 // Draw lines
                 g.DrawLine(pen, _cropRect.Left, 0, _cropRect.Left, screenBounds.Height); // Left

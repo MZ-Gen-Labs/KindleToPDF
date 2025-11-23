@@ -26,19 +26,19 @@ namespace KindleToPDF
                         if (dpi > 0)
                         {
                             // PDF points = (pixels / dpi) * 72
-                            page.Width = (image.PixelWidth / dpi) * 72;
-                            page.Height = (image.PixelHeight / dpi) * 72;
+                            page.Width = XUnit.FromPoint((image.PixelWidth / dpi) * 72);
+                            page.Height = XUnit.FromPoint((image.PixelHeight / dpi) * 72);
                         }
                         else
                         {
                             // Use image's internal DPI or default
-                            page.Width = image.PointWidth;
-                            page.Height = image.PointHeight;
+                            page.Width = XUnit.FromPoint(image.PointWidth);
+                            page.Height = XUnit.FromPoint(image.PointHeight);
                         }
 
                         using (XGraphics gfx = XGraphics.FromPdfPage(page))
                         {
-                            gfx.DrawImage(image, 0, 0, page.Width, page.Height);
+                            gfx.DrawImage(image, 0, 0, page.Width.Point, page.Height.Point);
                         }
                     }
                 }

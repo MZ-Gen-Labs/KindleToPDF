@@ -1,0 +1,28 @@
+  復元対象のプロジェクトを決定しています...
+  復元対象のすべてのプロジェクトは最新です。
+c:\Git\KindleToPDF\src\Form1.cs(50,16): warning CS8618: null 非許容の フィールド 'btnAbort' には、コンストラクターの終了時に null 以外の値が入っていなければなりません。'required' 修飾子を追加するか、フィールド を Null 許容として宣言することを検討してください。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\AutomationLogic.cs(208,45): warning CS8603: Null 参照戻り値である可能性があります。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\AutomationLogic.cs(213,37): warning CS8603: Null 参照戻り値である可能性があります。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\AutomationLogic.cs(234,20): warning CS8603: Null 参照戻り値である可能性があります。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(379,38): warning CS8602: null 参照の可能性があるものの逆参照です。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(652,36): warning CS8600: Null リテラルまたは Null の可能性がある値を Null 非許容型に変換しています。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(718,40): warning CS8600: Null リテラルまたは Null の可能性がある値を Null 非許容型に変換しています。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(788,67): warning CS8602: null 参照の可能性があるものの逆参照です。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(788,67): warning CS8603: Null 参照戻り値である可能性があります。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+  KindleToPDF -> c:\Git\KindleToPDF\src\bin\Debug\net10.0-windows\KindleToPDF.dll
+
+ビルドに成功しました。
+
+c:\Git\KindleToPDF\src\Form1.cs(50,16): warning CS8618: null 非許容の フィールド 'btnAbort' には、コンストラクターの終了時に null 以外の値が入っていなければなりません。'required' 修飾子を追加するか、フィールド を Null 許容として宣言することを検討してください。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\AutomationLogic.cs(208,45): warning CS8603: Null 参照戻り値である可能性があります。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\AutomationLogic.cs(213,37): warning CS8603: Null 参照戻り値である可能性があります。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\AutomationLogic.cs(234,20): warning CS8603: Null 参照戻り値である可能性があります。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(379,38): warning CS8602: null 参照の可能性があるものの逆参照です。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(652,36): warning CS8600: Null リテラルまたは Null の可能性がある値を Null 非許容型に変換しています。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(718,40): warning CS8600: Null リテラルまたは Null の可能性がある値を Null 非許容型に変換しています。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(788,67): warning CS8602: null 参照の可能性があるものの逆参照です。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+c:\Git\KindleToPDF\src\Form1.cs(788,67): warning CS8603: Null 参照戻り値である可能性があります。 [c:\Git\KindleToPDF\src\KindleToPDF.csproj]
+    9 個の警告
+    0 エラー
+
+経過時間 00:00:01.73

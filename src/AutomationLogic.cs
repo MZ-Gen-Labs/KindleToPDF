@@ -203,7 +203,7 @@ namespace KindleToPDF
             SetForegroundWindow(hWnd);
         }
 
-        public string GetBookTitleFromWindow(IntPtr hWnd)
+        public string? GetBookTitleFromWindow(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero) return null;
 

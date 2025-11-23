@@ -22,7 +22,7 @@ namespace KindleToPDF
             this.TopMost = true;
             this.Cursor = Cursors.Cross;
 
-            _screenBounds = Screen.PrimaryScreen.Bounds;
+            _screenBounds = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
             
             // If initialCropRect is provided and valid, use it; otherwise use default 10% margin
             if (initialCropRect != Rectangle.Empty && initialCropRect.Width > 0 && initialCropRect.Height > 0)
@@ -48,7 +48,7 @@ namespace KindleToPDF
             this.KeyDown += OverlayForm_KeyDown;
         }
 
-        private void OverlayForm_Paint(object sender, PaintEventArgs e)
+        private void OverlayForm_Paint(object? sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
             Pen pen = new Pen(Color.Red, 2);
@@ -66,7 +66,7 @@ namespace KindleToPDF
             g.DrawString(msg, font, Brushes.White, 50, 50);
         }
 
-        private void OverlayForm_MouseDown(object sender, MouseEventArgs e)
+        private void OverlayForm_MouseDown(object? sender, MouseEventArgs e)
         {
             if (Math.Abs(e.X - _left) < HandleSize) _draggingLeft = true;
             else if (Math.Abs(e.X - _right) < HandleSize) _draggingRight = true;
@@ -74,7 +74,7 @@ namespace KindleToPDF
             else if (Math.Abs(e.Y - _bottom) < HandleSize) _draggingBottom = true;
         }
 
-        private void OverlayForm_MouseMove(object sender, MouseEventArgs e)
+        private void OverlayForm_MouseMove(object? sender, MouseEventArgs e)
         {
             if (_draggingLeft) _left = e.X;
             if (_draggingRight) _right = e.X;
@@ -94,12 +94,12 @@ namespace KindleToPDF
             }
         }
 
-        private void OverlayForm_MouseUp(object sender, MouseEventArgs e)
+        private void OverlayForm_MouseUp(object? sender, MouseEventArgs e)
         {
             _draggingLeft = _draggingTop = _draggingRight = _draggingBottom = false;
         }
 
-        private void OverlayForm_KeyDown(object sender, KeyEventArgs e)
+        private void OverlayForm_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
