@@ -346,6 +346,54 @@ namespace KindleToPDF
             // Move all existing controls to tabHome
             int y = 15;
 
+
+
+            // Automation Settings - GroupBox (Moved from Settings tab)
+            GroupBox grpAutomation = new GroupBox
+            {
+                Text = "Automation Settings",
+                Location = new Point(10, y),
+                Size = new Size(450, 90),
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+            tabHome.Controls.Add(grpAutomation);
+
+            // 1. Auto-detect Page Turn
+            chkAutoDetect = new CheckBox { Text = "Auto-detect Page Turn", Location = new Point(15, 25), AutoSize = true, Checked = true, Font = new Font(this.Font, FontStyle.Regular) };
+            chkAutoDetect.CheckedChanged += (s, e) => 
+            {
+                txtInterval.Enabled = !chkAutoDetect.Checked;
+                lblInterval.Enabled = !chkAutoDetect.Checked;
+            };
+            grpAutomation.Controls.Add(chkAutoDetect);
+
+            // Interval
+            lblInterval = new Label { Text = "Interval (ms):", Location = new Point(200, 27), AutoSize = true, Font = new Font(this.Font, FontStyle.Regular) };
+            txtInterval = new TextBox { Text = "1000", Location = new Point(280, 24), Width = 60, Font = new Font(this.Font, FontStyle.Regular) };
+            txtInterval.Enabled = !chkAutoDetect.Checked;
+            lblInterval.Enabled = !chkAutoDetect.Checked;
+            grpAutomation.Controls.Add(lblInterval);
+            grpAutomation.Controls.Add(txtInterval);
+
+            // 2. Stop at Last Page
+            chkStopAtLastPage = new CheckBox { Text = "Stop at Last Page", Location = new Point(15, 55), AutoSize = true, Checked = true, Font = new Font(this.Font, FontStyle.Regular) };
+            chkStopAtLastPage.CheckedChanged += (s, e) =>
+            {
+                txtPages.Enabled = !chkStopAtLastPage.Checked;
+                lblPages.Enabled = !chkStopAtLastPage.Checked;
+            };
+            grpAutomation.Controls.Add(chkStopAtLastPage);
+
+            // Page Count
+            lblPages = new Label { Text = "Page Count:", Location = new Point(200, 57), AutoSize = true, Font = new Font(this.Font, FontStyle.Regular) };
+            txtPages = new TextBox { Text = "10", Location = new Point(280, 54), Width = 60, Font = new Font(this.Font, FontStyle.Regular) };
+            txtPages.Enabled = !chkStopAtLastPage.Checked;
+            lblPages.Enabled = !chkStopAtLastPage.Checked;
+            grpAutomation.Controls.Add(lblPages);
+            grpAutomation.Controls.Add(txtPages);
+
+            y += 100;
+
             // Capture Mode Selection - GroupBox
             GroupBox grpCaptureMode = new GroupBox
             {
@@ -382,46 +430,10 @@ namespace KindleToPDF
             // --- Settings Tab Controls ---
             int settingsY = 15;
 
-            // 1. Auto-detect Page Turn
-            chkAutoDetect = new CheckBox { Text = "Auto-detect Page Turn", Location = new Point(20, settingsY), AutoSize = true, Checked = true };
-            chkAutoDetect.CheckedChanged += (s, e) => 
-            {
-                txtInterval.Enabled = !chkAutoDetect.Checked;
-                lblInterval.Enabled = !chkAutoDetect.Checked;
-            };
-            tabSettings.Controls.Add(chkAutoDetect);
 
-            settingsY += 25;
-            // 2. Interval
-            lblInterval = new Label { Text = "Interval (ms):", Location = new Point(20, settingsY), AutoSize = true };
-            txtInterval = new TextBox { Text = "1000", Location = new Point(150, settingsY - 3) };
-            // Initialize enabled state
-            txtInterval.Enabled = !chkAutoDetect.Checked;
-            lblInterval.Enabled = !chkAutoDetect.Checked;
-            tabSettings.Controls.Add(lblInterval);
-            tabSettings.Controls.Add(txtInterval);
 
-            settingsY += 30;
-            // 3. Stop at Last Page
-            chkStopAtLastPage = new CheckBox { Text = "Stop at Last Page", Location = new Point(20, settingsY), AutoSize = true, Checked = true };
-            chkStopAtLastPage.CheckedChanged += (s, e) =>
-            {
-                txtPages.Enabled = !chkStopAtLastPage.Checked;
-                lblPages.Enabled = !chkStopAtLastPage.Checked;
-            };
-            tabSettings.Controls.Add(chkStopAtLastPage);
+            // Moved Auto-detect and Stop at Last Page to Home tab
 
-            settingsY += 25;
-            // 4. Page Count
-            lblPages = new Label { Text = "Page Count:", Location = new Point(20, settingsY), AutoSize = true };
-            txtPages = new TextBox { Text = "10", Location = new Point(150, settingsY - 3) };
-            // Initialize enabled state
-            txtPages.Enabled = !chkStopAtLastPage.Checked;
-            lblPages.Enabled = !chkStopAtLastPage.Checked;
-            tabSettings.Controls.Add(lblPages);
-            tabSettings.Controls.Add(txtPages);
-
-            settingsY += 30;
             chkAlwaysOnTop = new CheckBox { Text = "Always on Top", Location = new Point(20, settingsY), AutoSize = true, Checked = true };
             chkAlwaysOnTop.CheckedChanged += (s, e) => { this.TopMost = chkAlwaysOnTop.Checked; };
             tabSettings.Controls.Add(chkAlwaysOnTop);
