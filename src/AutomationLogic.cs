@@ -47,6 +47,47 @@ namespace KindleToPDF
 
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
+        [DllImport("user32.dll")]
+        static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetForegroundWindow();
+
+        [DllImport("kernel32.dll")]
+        static extern uint GetCurrentThreadId();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr pvParam, uint fWinIni);
+
+        private const uint SPI_GETFOREGROUNDLOCKTIMEOUT = 0x2000;
+        private const uint SPI_SETFOREGROUNDLOCKTIMEOUT = 0x2001;
+        private const int SPIF_SENDCHANGE = 0x2;
+
+        [DllImport("user32.dll")]
+        static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        static extern void SwitchToThisWindow(IntPtr hWnd, bool fAltTab);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
+
+        [Serializable]
+        [StructLayout(LayoutKind.Sequential)]
+        public struct WINDOWPLACEMENT
+        {
+            public int length;
+            public int flags;
+            public int showCmd;
+            public Point ptMinPosition;
+            public Point ptMaxPosition;
+            public RECT rcNormalPosition;
+        }
+
+        private const int SW_SHOWNORMAL = 1;
+        private const int SW_SHOW = 5;
+
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
@@ -64,17 +105,38 @@ namespace KindleToPDF
         private const int VK_NEXT = 0x22; // PageDown
         private const int VK_F11 = 0x7A;
         private const int SW_RESTORE = 9;
+        private const int SW_MINIMIZE = 6;
+
+        private Action<string>? _logCallback;
+
+        public void SetLogCallback(Action<string> logCallback)
+        {
+            _logCallback = logCallback;
+        }
+
+        private void Log(string message)
+        {
+            if (_logCallback != null)
+                _logCallback(message);
+            else
+                Debug.WriteLine(message);
+        }
 
         public IntPtr GetKindleWindow()
         {
             // Process.MainWindowHandle returns IntPtr.Zero for minimized windows
             // Use EnumWindows to find Kindle window regardless of state
             Process[] processes = Process.GetProcessesByName("Kindle");
+            Log($"GetKindleWindow: Found {processes.Length} Kindle processes");
+            
             if (processes.Length == 0)
                 return IntPtr.Zero;
 
             uint kindleProcessId = (uint)processes[0].Id;
+            Log($"GetKindleWindow: Kindle process ID = {kindleProcessId}");
+            
             IntPtr foundWindow = IntPtr.Zero;
+            int windowCount = 0;
 
             EnumWindows((hWnd, lParam) =>
             {
@@ -83,20 +145,19 @@ namespace KindleToPDF
                 {
                     // Check if this is a visible window (not a child window)
                     System.Text.StringBuilder sb = new System.Text.StringBuilder(256);
-                    if (GetWindowText(hWnd, sb, sb.Capacity) > 0)
+                    int length = GetWindowText(hWnd, sb, sb.Capacity);
+                    string title = sb.ToString();
+                    
+                    if (length > 0 && title.Contains("Kindle"))
                     {
-                        string title = sb.ToString();
-                        // Kindle main window contains "Kindle" in title
-                        if (title.Contains("Kindle"))
-                        {
-                            foundWindow = hWnd;
-                            return false; // Stop enumeration
-                        }
+                        foundWindow = hWnd;
+                        return false; // Stop enumeration
                     }
                 }
                 return true; // Continue enumeration
             }, IntPtr.Zero);
 
+            Log($"GetKindleWindow: Checked {windowCount} windows for process {kindleProcessId}, found={foundWindow}");
             return foundWindow;
         }
 
@@ -237,24 +298,61 @@ namespace KindleToPDF
         public void BringWindowToFront(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero) return;
-            
-            // Restore if minimized
-            if (IsIconic(hWnd))
+
+            // Check window placement to see if minimized
+            WINDOWPLACEMENT placement = new WINDOWPLACEMENT();
+            placement.length = Marshal.SizeOf(placement);
+            GetWindowPlacement(hWnd, ref placement);
+
+            bool isMinimized = placement.showCmd == 2; // SW_SHOWMINIMIZED = 2
+
+            if (isMinimized || IsIconic(hWnd))
             {
+                Log("BringWindowToFront: Window is minimized, restoring...");
                 ShowWindow(hWnd, SW_RESTORE);
-                Thread.Sleep(500); // Wait longer for window to fully restore
+                Thread.Sleep(500); 
+                ShowWindow(hWnd, SW_SHOW); // Ensure it's shown
+                Thread.Sleep(200);
+            }
+
+            // Use SwitchToThisWindow which is often more effective than SetForegroundWindow
+            // for bringing windows to front
+            SwitchToThisWindow(hWnd, true);
+            Thread.Sleep(100);
+
+            // Verify if it worked
+            IntPtr foreground = GetForegroundWindow();
+            if (foreground != hWnd)
+            {
+                Log($"BringWindowToFront: SwitchToThisWindow didn't fully activate (Foreground={foreground}). Retrying with AttachThreadInput...");
+                
+                // Fallback to the AttachThreadInput method if SwitchToThisWindow didn't make it the foreground window
+                uint foregroundThreadId = GetWindowThreadProcessId(foreground, out _);
+                uint appThreadId = GetCurrentThreadId();
+                uint targetThreadId = GetWindowThreadProcessId(hWnd, out _);
+
+                if (foregroundThreadId != targetThreadId)
+                {
+                    AttachThreadInput(foregroundThreadId, appThreadId, true);
+                    AttachThreadInput(targetThreadId, appThreadId, true);
+
+                    SetForegroundWindow(hWnd);
+                    
+                    AttachThreadInput(foregroundThreadId, appThreadId, false);
+                    AttachThreadInput(targetThreadId, appThreadId, false);
+                }
+                else
+                {
+                    SetForegroundWindow(hWnd);
+                }
             }
             
-            // Try multiple times to set foreground window
-            // Sometimes SetForegroundWindow fails if another app is active
-            for (int i = 0; i < 3; i++)
+            // Final check and attempt
+            if (GetForegroundWindow() != hWnd)
             {
-                if (SetForegroundWindow(hWnd))
-                {
-                    Thread.Sleep(100); // Give it time to become active
-                    break;
-                }
-                Thread.Sleep(100);
+                 Log("BringWindowToFront: Still not foreground. Trying Alt key trick...");
+                 keybd_event(0, 0, 0, 0);
+                 SwitchToThisWindow(hWnd, true);
             }
         }
 
@@ -262,12 +360,29 @@ namespace KindleToPDF
         {
             if (hWnd == IntPtr.Zero) return null;
 
+            // Restore if minimized to get full window title
+            bool wasMinimized = IsIconic(hWnd);
+            if (wasMinimized)
+            {
+                Log("GetBookTitleFromWindow: Window is minimized, restoring...");
+                ShowWindow(hWnd, SW_RESTORE);
+                Thread.Sleep(800); // Wait longer for window to fully restore and title to update
+                Log("GetBookTitleFromWindow: Window restored");
+            }
+
             System.Text.StringBuilder sb = new System.Text.StringBuilder(256);
             int length = GetWindowText(hWnd, sb, sb.Capacity);
+            
+            // Restore minimized state if it was minimized
+            if (wasMinimized)
+            {
+                ShowWindow(hWnd, SW_MINIMIZE);
+            }
             
             if (length == 0) return null;
 
             string windowTitle = sb.ToString();
+            Log($"GetBookTitleFromWindow: Window title = '{windowTitle}'");
             
             // Extract book title from "Kindle for PC [device] - [book title]"
             // Find first occurrence of " - " and take everything after it
@@ -283,9 +398,11 @@ namespace KindleToPDF
                     bookTitle = bookTitle.Replace(c, '_');
                 }
                 
+                Log($"GetBookTitleFromWindow: Extracted book title = '{bookTitle}'");
                 return bookTitle;
             }
 
+            Log($"GetBookTitleFromWindow: Could not extract book title from '{windowTitle}'");
             return null;
         }
         public int GetTotalPageCount(IntPtr kindleWnd)
