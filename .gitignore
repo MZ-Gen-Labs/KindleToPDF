@@ -239,3 +239,4 @@ Thumbs.db
 tmp/
 src/build_log*.txt
 src/build_verbose.txt
+src/build_error.txt

@@ -430,11 +430,11 @@ namespace KindleToPDF
             grpAutomation.Controls.Add(lblPages);
             grpAutomation.Controls.Add(txtPages);
 
-            y += 100;
+            y += 95; // Reduced gap
 
 
 
-            y += 100;
+
 
             // --- Settings Tab Controls ---
             int settingsY = 15;
@@ -799,7 +799,7 @@ namespace KindleToPDF
             {
                 Text = "Manual Capture Mode",
                 Location = new Point(10, y),
-                Size = new Size(450, 140),
+                Size = new Size(450, 100), // Adjusted height
                 Font = new Font(this.Font, FontStyle.Bold)
             };
             tabHome.Controls.Add(grpManualCapture);
@@ -813,21 +813,40 @@ namespace KindleToPDF
             };
             grpManualCapture.Controls.Add(lblCaptureCount);
 
+            int btnY = 50;
+            int btnWidth = 100;
+            int spacing = 10;
+            int startX = 10;
+
             btnCapture = new Button 
             { 
                 Text = "Capture Page", 
-                Location = new Point(10, 50), 
-                Size = new Size(100, 35),
+                Location = new Point(startX, btnY), 
+                Size = new Size(btnWidth, 35),
                 Font = new Font(this.Font, FontStyle.Regular)
             };
             btnCapture.Click += BtnCapture_Click;
             grpManualCapture.Controls.Add(btnCapture);
 
+            btnCreatePdf = new Button 
+            { 
+                Text = "Create PDF", 
+                Location = new Point(startX + btnWidth + spacing, btnY), 
+                Size = new Size(btnWidth, 35),
+                BackColor = Color.FromArgb(76, 175, 80), // Green for emphasis
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
+            btnCreatePdf.FlatAppearance.BorderSize = 0;
+            btnCreatePdf.Click += BtnCreatePdf_Click;
+            grpManualCapture.Controls.Add(btnCreatePdf);
+
             btnRemoveLast = new Button 
             { 
                 Text = "Remove Last", 
-                Location = new Point(120, 50), 
-                Size = new Size(100, 35),
+                Location = new Point(startX + (btnWidth + spacing) * 2, btnY), 
+                Size = new Size(btnWidth, 35),
                 Font = new Font(this.Font, FontStyle.Regular)
             };
             btnRemoveLast.Click += BtnRemoveLast_Click;
@@ -836,26 +855,13 @@ namespace KindleToPDF
             btnClearAll = new Button 
             { 
                 Text = "Clear All", 
-                Location = new Point(10, 90), 
-                Size = new Size(100, 35),
+                Location = new Point(startX + (btnWidth + spacing) * 3, btnY), 
+                Size = new Size(btnWidth, 35),
                 Font = new Font(this.Font, FontStyle.Regular)
             };
             btnClearAll.Click += BtnClearAll_Click;
             grpManualCapture.Controls.Add(btnClearAll);
 
-            btnCreatePdf = new Button 
-            { 
-                Text = "Create PDF", 
-                Location = new Point(120, 90), 
-                Size = new Size(100, 35),
-                BackColor = Color.FromArgb(76, 175, 80), // Green
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font(this.Font, FontStyle.Regular)
-            };
-            btnCreatePdf.FlatAppearance.BorderSize = 0;
-            btnCreatePdf.Click += BtnCreatePdf_Click;
-            grpManualCapture.Controls.Add(btnCreatePdf);
 
             y += 150;
             txtLog = new TextBox { Multiline = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill, ReadOnly = true };
