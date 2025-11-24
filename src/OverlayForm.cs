@@ -10,7 +10,7 @@ namespace KindleToPDF
         private Rectangle _screenBounds;
         private int _left, _top, _right, _bottom;
         private bool _draggingLeft, _draggingTop, _draggingRight, _draggingBottom;
-        private const int HandleSize = 10;
+        private const int HandleSize = Constants.HANDLE_SIZE;
 
         public OverlayForm(Rectangle initialCropRect = default)
         {

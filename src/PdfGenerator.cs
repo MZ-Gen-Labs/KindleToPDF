@@ -9,13 +9,24 @@ using PdfSharp.Pdf;
 
 namespace KindleToPDF
 {
+    /// <summary>
+    /// Handles PDF generation from captured images with various compression options
+    /// </summary>
     public class PdfGenerator
     {
+        /// <summary>
+        /// Creates a PDF document from a list of image files
+        /// </summary>
+        /// <param name="imagePaths">List of image file paths</param>
+        /// <param name="outputPdfPath">Output PDF file path</param>
+        /// <param name="dpi">Target DPI (0 for default)</param>
+        /// <param name="colorMode">Image color mode for compression</param>
+        /// <param name="jpegQuality">JPEG quality (60-100)</param>
         public void CreatePdf(List<string> imagePaths, string outputPdfPath, double dpi = 0, ImageColorMode colorMode = ImageColorMode.FullColor, int jpegQuality = 80)
         {
             try
             {
-                File.AppendAllText("debug_log.txt", $"CreatePdf: Start. Files={imagePaths.Count}, Out={outputPdfPath}, Mode={colorMode}\n");
+                Logger.Info($"CreatePdf: Start. Files={imagePaths.Count}, Out={outputPdfPath}, Mode={colorMode}");
                 
                 using (PdfDocument document = new PdfDocument())
                 {
@@ -63,26 +74,33 @@ namespace KindleToPDF
                         }
                         catch (Exception ex)
                         {
-                            File.AppendAllText("debug_log.txt", $"ERROR processing page {imagePath}: {ex.Message}\n{ex.StackTrace}\n");
+                            Logger.Error($"Error processing page {imagePath}: {ex.Message}", ex);
                         }
                         finally
                         {
                             // Clean up processed image if it's a temp file
                             if (isTempFile && File.Exists(processedImagePath))
                             {
-                                try { File.Delete(processedImagePath); } catch { }
+                                try 
+                                { 
+                                    File.Delete(processedImagePath); 
+                                } 
+                                catch (Exception ex) 
+                                { 
+                                    Logger.Warning($"Failed to delete temp file {processedImagePath}: {ex.Message}");
+                                }
                             }
                         }
                     }
 
                     document.Save(outputPdfPath);
-                    File.AppendAllText("debug_log.txt", "CreatePdf: Saved successfully.\n");
+                    Logger.Info($"PDF saved successfully: {outputPdfPath}");
                 }
             }
             catch (Exception ex)
             {
-                File.AppendAllText("debug_log.txt", $"CRITICAL ERROR in CreatePdf: {ex.Message}\n{ex.StackTrace}\n");
-                throw; // Rethrow to let UI handle/show it
+                Logger.Error($"Critical error in CreatePdf: {ex.Message}", ex);
+                throw;
             }
         }
 
@@ -140,9 +158,11 @@ namespace KindleToPDF
             }
         }
 
+        /// <summary>
+        /// Converts an image to monochrome (1-bit) using thresholding
+        /// </summary>
         private Bitmap ConvertToMonochrome(Bitmap original)
         {
-            // Thresholding
             Bitmap bmp = new Bitmap(original.Width, original.Height, PixelFormat.Format1bppIndexed);
             
             // Lock Source as 24bpp for easy reading
@@ -174,10 +194,9 @@ namespace KindleToPDF
                         byte b = srcBuffer[srcIdx];
                         byte g = srcBuffer[srcIdx + 1];
                         byte r = srcBuffer[srcIdx + 2];
-                        int gray = (int)(r * 0.299 + g * 0.587 + b * 0.114);
+                        int gray = (int)(r * Constants.RED_WEIGHT + g * Constants.GREEN_WEIGHT + b * Constants.BLUE_WEIGHT);
 
-                        // Threshold
-                        if (gray > 128)
+                        if (gray > Constants.IMAGE_THRESHOLD)
                         {
                             // Set bit to 1 (White)
                             int destIdx = y * destStride + (x >> 3); // x / 8
@@ -198,6 +217,9 @@ namespace KindleToPDF
             return bmp;
         }
 
+        /// <summary>
+        /// Converts an image to grayscale (8-bit)
+        /// </summary>
         private Bitmap ConvertToGrayscale(Bitmap original)
         {
             Bitmap bmp = new Bitmap(original.Width, original.Height, PixelFormat.Format8bppIndexed);
@@ -236,7 +258,7 @@ namespace KindleToPDF
                         byte g = srcBuffer[srcIdx + 1];
                         byte r = srcBuffer[srcIdx + 2];
 
-                        destBuffer[destIdx] = (byte)(r * 0.299 + g * 0.587 + b * 0.114);
+                        destBuffer[destIdx] = (byte)(r * Constants.RED_WEIGHT + g * Constants.GREEN_WEIGHT + b * Constants.BLUE_WEIGHT);
                     }
                 }
 
@@ -251,14 +273,17 @@ namespace KindleToPDF
             return bmp;
         }
 
+        /// <summary>
+        /// Converts an image to 256-color indexed format
+        /// </summary>
         private Bitmap ConvertToIndexed256(Bitmap original)
         {
-            // GDI+ Clone to 8bppIndexed uses a default palette (usually halftone).
-            // This is safe (no Graphics used on indexed image) and simplest for now.
-            // If higher quality is needed, an octree quantizer would be required.
             return original.Clone(new Rectangle(0, 0, original.Width, original.Height), PixelFormat.Format8bppIndexed);
         }
 
+        /// <summary>
+        /// Converts an image to high color (16-bit)
+        /// </summary>
         private Bitmap ConvertToHighColor(Bitmap original)
         {
             return original.Clone(new Rectangle(0, 0, original.Width, original.Height), PixelFormat.Format16bppRgb565);

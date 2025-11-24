@@ -69,6 +69,9 @@ namespace KindleToPDF
         private TrackBar trkJpegQuality = null!;
         private Label lblJpegQualityValue = null!;
 
+        // UI Enhancements
+        private ToolTip toolTip = null!;
+
         private AppSettings _settings = null!;
 
         public Form1()
@@ -246,6 +249,15 @@ namespace KindleToPDF
         {
             this.Size = new Size(500, 850); // Increased height for new controls
             this.Text = "Kindle to PDF Automation";
+
+            // Initialize ToolTip for UI guidance
+            toolTip = new ToolTip
+            {
+                AutoPopDelay = 5000,
+                InitialDelay = 500,
+                ReshowDelay = 100,
+                ShowAlways = true
+            };
 
             // Create TabControl
             TabControl tabControl = new TabControl
@@ -483,15 +495,44 @@ namespace KindleToPDF
             y += 45;
 
             y += 35;
-            btnStart = new Button { Text = "Start", Location = new Point(50, y), Size = new Size(100, 40) };
+            btnStart = new Button 
+            { 
+                Text = "Start", 
+                Location = new Point(50, y), 
+                Size = new Size(100, 40),
+                BackColor = Color.FromArgb(76, 175, 80), // Green
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnStart.FlatAppearance.BorderSize = 0;
             btnStart.Click += BtnStart_Click;
             tabHome.Controls.Add(btnStart);
 
-            btnStop = new Button { Text = "Stop", Location = new Point(160, y), Size = new Size(100, 40), Enabled = false };
+            btnStop = new Button 
+            { 
+                Text = "Stop", 
+                Location = new Point(160, y), 
+                Size = new Size(100, 40), 
+                Enabled = false,
+                BackColor = Color.FromArgb(33, 150, 243), // Blue
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnStop.FlatAppearance.BorderSize = 0;
             btnStop.Click += BtnStop_Click;
             tabHome.Controls.Add(btnStop);
 
-            btnAbort = new Button { Text = "Abort", Location = new Point(270, y), Size = new Size(80, 40), Enabled = false, BackColor = Color.LightPink };
+            btnAbort = new Button 
+            { 
+                Text = "Abort", 
+                Location = new Point(270, y), 
+                Size = new Size(80, 40), 
+                Enabled = false,
+                BackColor = Color.FromArgb(244, 67, 54), // Red
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnAbort.FlatAppearance.BorderSize = 0;
             btnAbort.Click += BtnAbort_Click;
             tabHome.Controls.Add(btnAbort);
 
@@ -518,13 +559,49 @@ namespace KindleToPDF
             btnClearAll.Click += BtnClearAll_Click;
             tabHome.Controls.Add(btnClearAll);
 
-            btnCreatePdf = new Button { Text = "Create PDF", Location = new Point(130, y), Size = new Size(100, 35), BackColor = Color.LightGreen };
+            btnCreatePdf = new Button 
+            { 
+                Text = "Create PDF", 
+                Location = new Point(130, y), 
+                Size = new Size(100, 35),
+                BackColor = Color.FromArgb(76, 175, 80), // Green
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnCreatePdf.FlatAppearance.BorderSize = 0;
             btnCreatePdf.Click += BtnCreatePdf_Click;
             tabHome.Controls.Add(btnCreatePdf);
 
             y += 40;
             txtLog = new TextBox { Multiline = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill, ReadOnly = true };
             tabLog.Controls.Add(txtLog);
+
+            // Setup ToolTips for better user guidance
+            toolTip.SetToolTip(rbModeContinuous, "Automatically capture pages continuously with page turn detection");
+            toolTip.SetToolTip(rbModeManual, "Manually select and capture individual pages");
+            
+            toolTip.SetToolTip(btnTop, "Navigate to the first page of the book");
+            toolTip.SetToolTip(btnPrev, "Go to the previous page");
+            toolTip.SetToolTip(btnNext, "Go to the next page");
+            toolTip.SetToolTip(btnBottom, "Navigate to the last page of the book");
+            toolTip.SetToolTip(btnFullScreen, "Toggle Kindle full screen mode (F11)");
+            
+            toolTip.SetToolTip(btnStart, "Start capturing pages from Kindle");
+            toolTip.SetToolTip(btnStop, "Stop capturing and generate PDF");
+            toolTip.SetToolTip(btnAbort, "Cancel capture and discard all captured pages");
+            
+            toolTip.SetToolTip(btnCapture, "Capture the current page");
+            toolTip.SetToolTip(btnRemoveLast, "Remove the last captured page");
+            toolTip.SetToolTip(btnClearAll, "Clear all captured pages");
+            toolTip.SetToolTip(btnCreatePdf, "Generate PDF from captured pages");
+            
+            toolTip.SetToolTip(chkAutoDetect, "Automatically detect when the page has turned (recommended)");
+            toolTip.SetToolTip(chkStopAtLastPage, "Automatically stop when the last page is detected");
+            toolTip.SetToolTip(chkAlwaysOnTop, "Keep this window always on top of other windows");
+            
+            toolTip.SetToolTip(btnSetCrop, "Set the crop area by dragging on screen");
+            toolTip.SetToolTip(cmbColorMode, "Select image quality/compression mode for PDF");
+            toolTip.SetToolTip(trkJpegQuality, "Adjust JPEG quality (higher = better quality, larger file size)");
         }
 
         private void Log(string message)

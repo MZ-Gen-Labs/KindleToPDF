@@ -16,9 +16,9 @@ namespace KindleToPDF
         [DllImport("user32.dll")]
         static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
-        private const int GWL_EXSTYLE = -20;
-        private const int WS_EX_LAYERED = 0x80000;
-        private const int WS_EX_TRANSPARENT = 0x20;
+        private const int GWL_EXSTYLE = Constants.GWL_EXSTYLE;
+        private const int WS_EX_LAYERED = Constants.WS_EX_LAYERED;
+        private const int WS_EX_TRANSPARENT = Constants.WS_EX_TRANSPARENT;
 
         public GuidelineOverlay()
         {

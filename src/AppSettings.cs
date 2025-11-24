@@ -71,24 +71,16 @@ namespace KindleToPDF
         {
             if (CropPatterns == null) CropPatterns = new List<Rectangle>();
             
-            // Resize if needed based on MaxPatterns
-            // Actually, we should probably respect MaxPatterns but also ensure we have enough slots up to MaxPatterns
-            // If MaxPatterns increases, we add. If decreases, we might remove? Or just keep them but UI limits selection?
-            // Let's keep it simple: Ensure we have at least MaxPatterns elements.
-            
             while (CropPatterns.Count < MaxPatterns)
             {
                 CropPatterns.Add(Rectangle.Empty);
             }
             
-            // If we have more than MaxPatterns, should we trim? Maybe not, to avoid data loss if user accidentally lowers count.
-            // But for the UI logic, we will limit selection to MaxPatterns.
-            
             if (SelectedPatternIndex >= MaxPatterns) SelectedPatternIndex = MaxPatterns - 1;
             if (SelectedPatternIndex < 0) SelectedPatternIndex = 0;
         }
 
-        private static string SettingsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
+        private static string SettingsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.SETTINGS_FILE_NAME);
 
         public static AppSettings Load()
         {
@@ -102,9 +94,9 @@ namespace KindleToPDF
                     return settings;
                 }
             }
-            catch 
+            catch (Exception ex)
             {
-                // Ignore errors and return default
+                Logger.Error($"Failed to load settings from {SettingsPath}: {ex.Message}", ex);
             }
             return new AppSettings();
         }
@@ -116,9 +108,9 @@ namespace KindleToPDF
                 string json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(SettingsPath, json);
             }
-            catch 
+            catch (Exception ex)
             {
-                // Ignore errors
+                Logger.Error($"Failed to save settings to {SettingsPath}: {ex.Message}", ex);
             }
         }
     }
