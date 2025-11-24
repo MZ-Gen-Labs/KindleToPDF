@@ -285,25 +285,38 @@ namespace KindleToPDF
             // Move all existing controls to tabHome
             int y = 15;
 
-            // Capture Mode Selection
-            Label lblMode = new Label { Text = "Capture Mode:", Location = new Point(20, y), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
-            tabHome.Controls.Add(lblMode);
-            y += 22;
+            // Capture Mode Selection - GroupBox
+            GroupBox grpCaptureMode = new GroupBox
+            {
+                Text = "Capture Mode",
+                Location = new Point(10, y),
+                Size = new Size(450, 90),
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+            tabHome.Controls.Add(grpCaptureMode);
 
-            rbModeContinuous = new RadioButton { Text = "Continuous Auto Capture", Location = new Point(30, y), AutoSize = true, Checked = true };
+            rbModeContinuous = new RadioButton 
+            { 
+                Text = "Continuous Auto Capture", 
+                Location = new Point(15, 25), 
+                AutoSize = true, 
+                Checked = true,
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
             rbModeContinuous.CheckedChanged += (s, e) => UpdateModeUI();
-            tabHome.Controls.Add(rbModeContinuous);
-            y += 22;
+            grpCaptureMode.Controls.Add(rbModeContinuous);
 
-            rbModeManual = new RadioButton { Text = "Manual Selection Capture", Location = new Point(30, y), AutoSize = true };
+            rbModeManual = new RadioButton 
+            { 
+                Text = "Manual Selection Capture", 
+                Location = new Point(15, 50), 
+                AutoSize = true,
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
             rbModeManual.CheckedChanged += (s, e) => UpdateModeUI();
-            tabHome.Controls.Add(rbModeManual);
-            y += 28;
+            grpCaptureMode.Controls.Add(rbModeManual);
 
-            // Separator
-            Label lblSeparator1 = new Label { Text = "━━━━━━━━━━━━━━━━━━━━━━━━━━━", Location = new Point(20, y), AutoSize = true, ForeColor = Color.Gray };
-            tabHome.Controls.Add(lblSeparator1);
-            y += 22;
+            y += 100;
 
             // --- Settings Tab Controls ---
             int settingsY = 15;
@@ -397,27 +410,67 @@ namespace KindleToPDF
 
             // JPEG quality controls visibility will be set in ApplySettingsToUI
 
-            y += 35;
-            btnTop = new Button { Text = "<< Top", Location = new Point(20, y), Size = new Size(80, 30) };
+            // Kindle Navigation - GroupBox
+            GroupBox grpNavigation = new GroupBox
+            {
+                Text = "Kindle Navigation",
+                Location = new Point(10, y),
+                Size = new Size(450, 110),
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+            tabHome.Controls.Add(grpNavigation);
+
+            btnTop = new Button 
+            { 
+                Text = "<< Top", 
+                Location = new Point(10, 25), 
+                Size = new Size(80, 30),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
             btnTop.Click += BtnTop_Click;
-            tabHome.Controls.Add(btnTop);
+            grpNavigation.Controls.Add(btnTop);
 
-            btnPrev = new Button { Text = "< Prev", Location = new Point(110, y), Size = new Size(80, 30) };
+            btnPrev = new Button 
+            { 
+                Text = "< Prev", 
+                Location = new Point(100, 25), 
+                Size = new Size(80, 30),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
             btnPrev.Click += BtnPrev_Click;
-            tabHome.Controls.Add(btnPrev);
+            grpNavigation.Controls.Add(btnPrev);
 
-            btnNext = new Button { Text = "Next >", Location = new Point(200, y), Size = new Size(80, 30) };
+            btnNext = new Button 
+            { 
+                Text = "Next >", 
+                Location = new Point(190, 25), 
+                Size = new Size(80, 30),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
             btnNext.Click += BtnNext_Click;
-            tabHome.Controls.Add(btnNext);
+            grpNavigation.Controls.Add(btnNext);
 
-            btnFullScreen = new Button { Text = "Full Screen", Location = new Point(20, y + 35), Size = new Size(80, 30) };
-            btnFullScreen.Click += BtnFullScreen_Click;
-            tabHome.Controls.Add(btnFullScreen);
-
-            y += 35;
-            btnBottom = new Button { Text = ">> Bottom", Location = new Point(290, y - 35), Size = new Size(80, 30) };
+            btnBottom = new Button 
+            { 
+                Text = ">> Bottom", 
+                Location = new Point(280, 25), 
+                Size = new Size(90, 30),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
             btnBottom.Click += BtnBottom_Click;
-            tabHome.Controls.Add(btnBottom);
+            grpNavigation.Controls.Add(btnBottom);
+
+            btnFullScreen = new Button 
+            { 
+                Text = "Full Screen", 
+                Location = new Point(10, 60), 
+                Size = new Size(100, 30),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
+            btnFullScreen.Click += BtnFullScreen_Click;
+            grpNavigation.Controls.Add(btnFullScreen);
+
+            y += 120;
 
             // --- Crop Tab Controls ---
             int cropY = 15;
@@ -492,87 +545,128 @@ namespace KindleToPDF
             tabSettings.Controls.Add(btnNamingOptions);
 
             // Adjust y for Home tab controls (Start/Stop buttons)
-            y += 45;
+            y += 10;
 
-            y += 35;
+            // Capture Control - GroupBox
+            GroupBox grpCaptureControl = new GroupBox
+            {
+                Text = "Capture Control",
+                Location = new Point(10, y),
+                Size = new Size(450, 90),
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+            tabHome.Controls.Add(grpCaptureControl);
+
             btnStart = new Button 
             { 
                 Text = "Start", 
-                Location = new Point(50, y), 
+                Location = new Point(40, 30), 
                 Size = new Size(100, 40),
                 BackColor = Color.FromArgb(76, 175, 80), // Green
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font(this.Font, FontStyle.Regular)
             };
             btnStart.FlatAppearance.BorderSize = 0;
             btnStart.Click += BtnStart_Click;
-            tabHome.Controls.Add(btnStart);
+            grpCaptureControl.Controls.Add(btnStart);
 
             btnStop = new Button 
             { 
                 Text = "Stop", 
-                Location = new Point(160, y), 
+                Location = new Point(150, 30), 
                 Size = new Size(100, 40), 
                 Enabled = false,
                 BackColor = Color.FromArgb(33, 150, 243), // Blue
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font(this.Font, FontStyle.Regular)
             };
             btnStop.FlatAppearance.BorderSize = 0;
             btnStop.Click += BtnStop_Click;
-            tabHome.Controls.Add(btnStop);
+            grpCaptureControl.Controls.Add(btnStop);
 
             btnAbort = new Button 
             { 
                 Text = "Abort", 
-                Location = new Point(270, y), 
+                Location = new Point(260, 30), 
                 Size = new Size(80, 40), 
                 Enabled = false,
                 BackColor = Color.FromArgb(244, 67, 54), // Red
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font(this.Font, FontStyle.Regular)
             };
             btnAbort.FlatAppearance.BorderSize = 0;
             btnAbort.Click += BtnAbort_Click;
-            tabHome.Controls.Add(btnAbort);
+            grpCaptureControl.Controls.Add(btnAbort);
 
-            y += 45;
-            // Manual Capture Mode Controls
-            Label lblSeparator2 = new Label { Text = "━━━━━━━━━━━━━━━━━━━━━━━━━━━", Location = new Point(20, y), AutoSize = true, ForeColor = Color.Gray };
-            tabHome.Controls.Add(lblSeparator2);
-            y += 22;
+            y += 100;
+            
+            // Manual Capture Mode Controls - GroupBox
+            GroupBox grpManualCapture = new GroupBox
+            {
+                Text = "Manual Capture Mode",
+                Location = new Point(10, y),
+                Size = new Size(450, 140),
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+            tabHome.Controls.Add(grpManualCapture);
 
-            lblCaptureCount = new Label { Text = "Captured: 0 pages", Location = new Point(20, y), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
-            tabHome.Controls.Add(lblCaptureCount);
-            y += 28;
+            lblCaptureCount = new Label 
+            { 
+                Text = "Captured: 0 pages", 
+                Location = new Point(10, 25), 
+                AutoSize = true, 
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
+            grpManualCapture.Controls.Add(lblCaptureCount);
 
-            btnCapture = new Button { Text = "Capture Page", Location = new Point(20, y), Size = new Size(100, 35) };
+            btnCapture = new Button 
+            { 
+                Text = "Capture Page", 
+                Location = new Point(10, 50), 
+                Size = new Size(100, 35),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
             btnCapture.Click += BtnCapture_Click;
-            tabHome.Controls.Add(btnCapture);
+            grpManualCapture.Controls.Add(btnCapture);
 
-            btnRemoveLast = new Button { Text = "Remove Last", Location = new Point(130, y), Size = new Size(100, 35) };
+            btnRemoveLast = new Button 
+            { 
+                Text = "Remove Last", 
+                Location = new Point(120, 50), 
+                Size = new Size(100, 35),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
             btnRemoveLast.Click += BtnRemoveLast_Click;
-            tabHome.Controls.Add(btnRemoveLast);
+            grpManualCapture.Controls.Add(btnRemoveLast);
 
-            y += 38;
-            btnClearAll = new Button { Text = "Clear All", Location = new Point(20, y), Size = new Size(100, 35) };
+            btnClearAll = new Button 
+            { 
+                Text = "Clear All", 
+                Location = new Point(10, 90), 
+                Size = new Size(100, 35),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
             btnClearAll.Click += BtnClearAll_Click;
-            tabHome.Controls.Add(btnClearAll);
+            grpManualCapture.Controls.Add(btnClearAll);
 
             btnCreatePdf = new Button 
             { 
                 Text = "Create PDF", 
-                Location = new Point(130, y), 
+                Location = new Point(120, 90), 
                 Size = new Size(100, 35),
                 BackColor = Color.FromArgb(76, 175, 80), // Green
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font(this.Font, FontStyle.Regular)
             };
             btnCreatePdf.FlatAppearance.BorderSize = 0;
             btnCreatePdf.Click += BtnCreatePdf_Click;
-            tabHome.Controls.Add(btnCreatePdf);
+            grpManualCapture.Controls.Add(btnCreatePdf);
 
-            y += 40;
+            y += 150;
             txtLog = new TextBox { Multiline = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill, ReadOnly = true };
             tabLog.Controls.Add(txtLog);
 
