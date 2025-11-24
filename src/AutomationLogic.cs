@@ -38,6 +38,15 @@ namespace KindleToPDF
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool IsIconic(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
@@ -58,14 +67,37 @@ namespace KindleToPDF
 
         public IntPtr GetKindleWindow()
         {
-            // Kindle main window usually has title "Kindle" or class name "Qt5QWindowIcon" (varies by version)
-            // Trying by window name first
+            // Process.MainWindowHandle returns IntPtr.Zero for minimized windows
+            // Use EnumWindows to find Kindle window regardless of state
             Process[] processes = Process.GetProcessesByName("Kindle");
-            if (processes.Length > 0)
+            if (processes.Length == 0)
+                return IntPtr.Zero;
+
+            uint kindleProcessId = (uint)processes[0].Id;
+            IntPtr foundWindow = IntPtr.Zero;
+
+            EnumWindows((hWnd, lParam) =>
             {
-                return processes[0].MainWindowHandle;
-            }
-            return IntPtr.Zero;
+                GetWindowThreadProcessId(hWnd, out uint processId);
+                if (processId == kindleProcessId)
+                {
+                    // Check if this is a visible window (not a child window)
+                    System.Text.StringBuilder sb = new System.Text.StringBuilder(256);
+                    if (GetWindowText(hWnd, sb, sb.Capacity) > 0)
+                    {
+                        string title = sb.ToString();
+                        // Kindle main window contains "Kindle" in title
+                        if (title.Contains("Kindle"))
+                        {
+                            foundWindow = hWnd;
+                            return false; // Stop enumeration
+                        }
+                    }
+                }
+                return true; // Continue enumeration
+            }, IntPtr.Zero);
+
+            return foundWindow;
         }
 
         public Rectangle GetWindowBounds(IntPtr hWnd)
@@ -104,7 +136,8 @@ namespace KindleToPDF
 
         public void ToggleFullScreen(IntPtr hWnd)
         {
-            SendKey(hWnd, VK_F11);
+            // SendKeys.SendWait is more reliable after window is restored and brought to front
+            SendKeys.SendWait("{F11}");
         }
 
         public void SendPrevPage(IntPtr hWnd, bool isRightToLeft)
@@ -209,10 +242,20 @@ namespace KindleToPDF
             if (IsIconic(hWnd))
             {
                 ShowWindow(hWnd, SW_RESTORE);
-                Thread.Sleep(200); // Wait for window to restore
+                Thread.Sleep(500); // Wait longer for window to fully restore
             }
             
-            SetForegroundWindow(hWnd);
+            // Try multiple times to set foreground window
+            // Sometimes SetForegroundWindow fails if another app is active
+            for (int i = 0; i < 3; i++)
+            {
+                if (SetForegroundWindow(hWnd))
+                {
+                    Thread.Sleep(100); // Give it time to become active
+                    break;
+                }
+                Thread.Sleep(100);
+            }
         }
 
         public string? GetBookTitleFromWindow(IntPtr hWnd)

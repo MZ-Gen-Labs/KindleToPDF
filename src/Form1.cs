@@ -1058,7 +1058,10 @@ namespace KindleToPDF
             if (kindleHandle != IntPtr.Zero)
             {
                 _automation.BringWindowToFront(kindleHandle);
+                Thread.Sleep(500); // Wait for window to fully restore and become active
                 _automation.ToggleFullScreen(kindleHandle);
+                Thread.Sleep(100); // Wait for full screen toggle
+                _automation.BringWindowToFront(kindleHandle); // Bring to front again after toggle
                 Log("Toggled Full Screen (F11).");
             }
             else

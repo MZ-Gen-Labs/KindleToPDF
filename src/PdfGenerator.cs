@@ -94,7 +94,7 @@ namespace KindleToPDF
 
             using (Bitmap original = new Bitmap(imagePath))
             {
-                Bitmap processed = null;
+                Bitmap? processed = null;
 
                 try
                 {
@@ -280,7 +280,7 @@ namespace KindleToPDF
             }
         }
 
-        private ImageCodecInfo GetEncoderInfo(string mimeType)
+        private ImageCodecInfo? GetEncoderInfo(string mimeType)
         {
             ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
             foreach (ImageCodecInfo codec in codecs)

@@ -1,0 +1,14 @@
+  蠕ｩ蜈・ｯｾ雎｡縺ｮ繝励Ο繧ｸ繧ｧ繧ｯ繝医ｒ豎ｺ螳壹＠縺ｦ縺・∪縺・..
+  蠕ｩ蜈・ｯｾ雎｡縺ｮ縺吶∋縺ｦ縺ｮ繝励Ο繧ｸ繧ｧ繧ｯ繝医・譛譁ｰ縺ｧ縺吶・
+C:\Git\KindleToPDF\src\PdfGenerator.cs(97,36): warning CS8600: Null 繝ｪ繝・Λ繝ｫ縺ｾ縺溘・ Null 縺ｮ蜿ｯ閭ｽ諤ｧ縺後≠繧句､繧・Null 髱櫁ｨｱ螳ｹ蝙九↓螟画鋤縺励※縺・∪縺吶・[C:\Git\KindleToPDF\src\KindleToPDF.csproj]
+C:\Git\KindleToPDF\src\PdfGenerator.cs(291,20): warning CS8603: Null 蜿ら・謌ｻ繧雁､縺ｧ縺ゅｋ蜿ｯ閭ｽ諤ｧ縺後≠繧翫∪縺吶・[C:\Git\KindleToPDF\src\KindleToPDF.csproj]
+  KindleToPDF -> C:\Git\KindleToPDF\src\bin\Debug\net10.0-windows\KindleToPDF.dll
+
+繝薙Ν繝峨↓謌仙粥縺励∪縺励◆縲・
+
+C:\Git\KindleToPDF\src\PdfGenerator.cs(97,36): warning CS8600: Null 繝ｪ繝・Λ繝ｫ縺ｾ縺溘・ Null 縺ｮ蜿ｯ閭ｽ諤ｧ縺後≠繧句､繧・Null 髱櫁ｨｱ螳ｹ蝙九↓螟画鋤縺励※縺・∪縺吶・[C:\Git\KindleToPDF\src\KindleToPDF.csproj]
+C:\Git\KindleToPDF\src\PdfGenerator.cs(291,20): warning CS8603: Null 蜿ら・謌ｻ繧雁､縺ｧ縺ゅｋ蜿ｯ閭ｽ諤ｧ縺後≠繧翫∪縺吶・[C:\Git\KindleToPDF\src\KindleToPDF.csproj]
+    2 蛟九・隴ｦ蜻・
+    0 繧ｨ繝ｩ繝ｼ
+
+邨碁℃譎る俣 00:00:01.85
