@@ -70,6 +70,21 @@ namespace KindleToPDF
         private Label lblJpegQualityValue = null!;
         private Label lblImageFormat = null!;
         private ComboBox cmbImageFormat = null!;
+        private Label lblThreshold = null!;
+        private TrackBar trkThreshold = null!;
+        private Label lblThresholdValue = null!;
+
+        // Output Settings Controls
+        private TextBox txtOutputDir = null!;
+        private Button btnBrowseDir = null!;
+        private RadioButton rbOverwrite = null!;
+        private RadioButton rbSequential = null!;
+        private Panel pnlSequential = null!;
+        private ComboBox cmbSeqType = null!;
+        private ComboBox cmbSeqFormat = null!;
+        private NumericUpDown numStartNumber = null!;
+        private NumericUpDown numDigits = null!;
+        private TextBox txtStartChar = null!;
 
         // UI Enhancements
         private ToolTip toolTip = null!;
@@ -173,6 +188,12 @@ namespace KindleToPDF
                     trkJpegQuality.Value = _settings.JpegQuality;
                     lblJpegQualityValue.Text = _settings.JpegQuality.ToString();
                 }
+
+                if (trkThreshold != null && lblThresholdValue != null)
+                {
+                    trkThreshold.Value = _settings.MonochromeThreshold;
+                    lblThresholdValue.Text = _settings.MonochromeThreshold.ToString();
+                }
                 
                 _cropRect = _settings.CropRect;
                 if (_cropRect != Rectangle.Empty)
@@ -199,6 +220,29 @@ namespace KindleToPDF
                 _cropRect = _settings.CropRect;
                 UpdateCropTextBoxes();
                 UpdateCropLimitLabels();
+
+                // Load Output Settings
+                if (txtOutputDir != null) txtOutputDir.Text = _settings.OutputDirectory;
+                
+                if (rbOverwrite != null && rbSequential != null)
+                {
+                    if (_settings.Mode == FileNameMode.Overwrite) rbOverwrite.Checked = true;
+                    else rbSequential.Checked = true;
+                }
+                
+                if (cmbSeqType != null) cmbSeqType.SelectedIndex = (int)_settings.SeqType;
+                
+                if (numStartNumber != null) numStartNumber.Value = _settings.StartNumber;
+                if (numDigits != null) numDigits.Value = _settings.NumberDigits;
+                if (txtStartChar != null) txtStartChar.Text = _settings.StartChar;
+                
+                // DateTime format is loaded in UpdateSequentialUI or here?
+                // UpdateSequentialUI handles the ComboBox population, so let's call it first
+                UpdateSequentialUI();
+                if (cmbSeqFormat != null && !string.IsNullOrEmpty(_settings.DateTimeFormat))
+                {
+                    cmbSeqFormat.Text = _settings.DateTimeFormat;
+                }
 
                 // Load book title on startup
                 if (_automation != null)
@@ -243,8 +287,18 @@ namespace KindleToPDF
             _settings.DpiIndex = cmbDpi.SelectedIndex;
             _settings.PageDirection = cmbDirection.SelectedIndex;
             _settings.ImageFormat = cmbImageFormat.SelectedIndex == 0 ? PdfImageFormat.Jpeg : PdfImageFormat.Png;
+            _settings.MonochromeThreshold = trkThreshold.Value;
             _settings.CropRect = _cropRect;
             _settings.CaptureMode = rbModeManual.Checked ? CaptureMode.Manual : CaptureMode.Continuous;
+
+            // Save Output Settings
+            _settings.OutputDirectory = txtOutputDir.Text;
+            _settings.Mode = rbOverwrite.Checked ? FileNameMode.Overwrite : FileNameMode.Sequential;
+            _settings.SeqType = (SequentialType)cmbSeqType.SelectedIndex;
+            _settings.StartNumber = (int)numStartNumber.Value;
+            _settings.NumberDigits = (int)numDigits.Value;
+            _settings.StartChar = txtStartChar.Text;
+            _settings.DateTimeFormat = cmbSeqFormat.Text;
 
             _settings.Save();
             
@@ -252,7 +306,6 @@ namespace KindleToPDF
             _guidelineOverlay?.Close();
             _guidelineOverlay?.Dispose();
         }
-
         private void InitializeCustomControls()
         {
             this.Size = new Size(500, 850); // Increased height for new controls
@@ -422,6 +475,21 @@ namespace KindleToPDF
             };
             tabSettings.Controls.Add(trkJpegQuality);
 
+            settingsY += 50;
+            lblThreshold = new Label { Text = "Mono Threshold:", Location = new Point(20, settingsY), AutoSize = true };
+            lblThresholdValue = new Label { Text = "180", Location = new Point(340, settingsY), AutoSize = true };
+            tabSettings.Controls.Add(lblThreshold);
+            tabSettings.Controls.Add(lblThresholdValue);
+
+            settingsY += 22;
+            trkThreshold = new TrackBar { Location = new Point(20, settingsY), Width = 300, Minimum = 0, Maximum = 255, Value = 180, TickFrequency = 10 };
+            trkThreshold.ValueChanged += (s, e) => 
+            {
+                lblThresholdValue.Text = trkThreshold.Value.ToString();
+                _settings.MonochromeThreshold = trkThreshold.Value;
+            };
+            tabSettings.Controls.Add(trkThreshold);
+
             // Adjust y for Home tab controls
             y += 10;
 
@@ -547,19 +615,75 @@ namespace KindleToPDF
             tabCrop.Controls.Add(txtCropBottom);
             tabCrop.Controls.Add(lblCropBottomMax);
 
-            settingsY += 60; // Increased spacing to avoid overlap with TrackBar
-            lblOutput = new Label { Text = "Output PDF:", Location = new Point(20, settingsY), AutoSize = true };
-            txtOutput = new TextBox { Text = "output.pdf", Location = new Point(100, settingsY - 3), Width = 150 };
-            tabSettings.Controls.Add(lblOutput);
-            tabSettings.Controls.Add(txtOutput);
+            settingsY += 50;
+            GroupBox grpOutput = new GroupBox
+            {
+                Text = "Output Settings",
+                Location = new Point(10, settingsY),
+                Size = new Size(450, 220),
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+            tabSettings.Controls.Add(grpOutput);
 
-            btnRefreshTitle = new Button { Text = "Refresh", Location = new Point(260, settingsY - 5), Size = new Size(60, 25) };
+            int outY = 25;
+            // Output Directory
+            Label lblDir = new Label { Text = "Output Dir:", Location = new Point(10, outY), AutoSize = true, Font = new Font(this.Font, FontStyle.Regular) };
+            txtOutputDir = new TextBox { Location = new Point(90, outY - 3), Width = 280, ReadOnly = true, Font = new Font(this.Font, FontStyle.Regular) };
+            btnBrowseDir = new Button { Text = "...", Location = new Point(380, outY - 5), Size = new Size(40, 25), Font = new Font(this.Font, FontStyle.Regular) };
+            btnBrowseDir.Click += BtnBrowseDir_Click;
+            grpOutput.Controls.Add(lblDir);
+            grpOutput.Controls.Add(txtOutputDir);
+            grpOutput.Controls.Add(btnBrowseDir);
+
+            outY += 35;
+            // File Name
+            lblOutput = new Label { Text = "File Name:", Location = new Point(10, outY), AutoSize = true, Font = new Font(this.Font, FontStyle.Regular) };
+            txtOutput = new TextBox { Text = "output.pdf", Location = new Point(90, outY - 3), Width = 280, Font = new Font(this.Font, FontStyle.Regular) };
+            btnRefreshTitle = new Button { Text = "Ref", Location = new Point(380, outY - 5), Size = new Size(40, 25), Font = new Font(this.Font, FontStyle.Regular) };
             btnRefreshTitle.Click += BtnRefreshTitle_Click;
-            tabSettings.Controls.Add(btnRefreshTitle);
+            grpOutput.Controls.Add(lblOutput);
+            grpOutput.Controls.Add(txtOutput);
+            grpOutput.Controls.Add(btnRefreshTitle);
 
-            btnNamingOptions = new Button { Text = "Options", Location = new Point(330, settingsY - 5), Size = new Size(60, 25) };
-            btnNamingOptions.Click += BtnNamingOptions_Click;
-            tabSettings.Controls.Add(btnNamingOptions);
+            outY += 35;
+            // Naming Mode
+            Label lblMode = new Label { Text = "Naming Mode:", Location = new Point(10, outY), AutoSize = true, Font = new Font(this.Font, FontStyle.Regular) };
+            grpOutput.Controls.Add(lblMode);
+
+            rbOverwrite = new RadioButton { Text = "Overwrite", Location = new Point(110, outY), AutoSize = true, Font = new Font(this.Font, FontStyle.Regular) };
+            rbSequential = new RadioButton { Text = "Sequential (Rename)", Location = new Point(200, outY), AutoSize = true, Font = new Font(this.Font, FontStyle.Regular) };
+            rbOverwrite.CheckedChanged += RbNamingMode_CheckedChanged;
+            rbSequential.CheckedChanged += RbNamingMode_CheckedChanged;
+            grpOutput.Controls.Add(rbOverwrite);
+            grpOutput.Controls.Add(rbSequential);
+
+            outY += 30;
+            // Sequential Options Panel
+            pnlSequential = new Panel { Location = new Point(10, outY), Size = new Size(430, 80) };
+            grpOutput.Controls.Add(pnlSequential);
+
+            Label lblType = new Label { Text = "Type:", Location = new Point(0, 5), AutoSize = true, Font = new Font(this.Font, FontStyle.Regular) };
+            cmbSeqType = new ComboBox { Location = new Point(80, 2), Width = 120, DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font(this.Font, FontStyle.Regular) };
+            cmbSeqType.Items.AddRange(new object[] { "Number", "Alphabet", "DateTime" });
+            cmbSeqType.SelectedIndexChanged += CmbSeqType_SelectedIndexChanged;
+            pnlSequential.Controls.Add(lblType);
+            pnlSequential.Controls.Add(cmbSeqType);
+
+            Label lblFormat = new Label { Text = "Format:", Location = new Point(220, 5), AutoSize = true, Font = new Font(this.Font, FontStyle.Regular) };
+            cmbSeqFormat = new ComboBox { Location = new Point(280, 2), Width = 120, Font = new Font(this.Font, FontStyle.Regular) };
+            pnlSequential.Controls.Add(lblFormat);
+            pnlSequential.Controls.Add(cmbSeqFormat);
+
+            // Number Options
+            numStartNumber = new NumericUpDown { Location = new Point(80, 40), Width = 60, Minimum = 0, Maximum = 99999, Font = new Font(this.Font, FontStyle.Regular) };
+            numDigits = new NumericUpDown { Location = new Point(280, 40), Width = 60, Minimum = 1, Maximum = 10, Font = new Font(this.Font, FontStyle.Regular) };
+            
+            // Alphabet Options
+            txtStartChar = new TextBox { Location = new Point(80, 40), Width = 60, MaxLength = 5, Font = new Font(this.Font, FontStyle.Regular) };
+
+            pnlSequential.Controls.Add(numStartNumber);
+            pnlSequential.Controls.Add(numDigits);
+            pnlSequential.Controls.Add(txtStartChar);
 
             // Adjust y for Home tab controls (Start/Stop buttons)
             y += 10;
@@ -758,6 +882,12 @@ namespace KindleToPDF
             if (lblJpegQuality != null) lblJpegQuality.Visible = showJpegQuality;
             if (trkJpegQuality != null) trkJpegQuality.Visible = showJpegQuality;
             if (lblJpegQualityValue != null) lblJpegQualityValue.Visible = showJpegQuality;
+
+            // Show Threshold only for Monochrome mode
+            bool showThreshold = _settings.ColorMode == ImageColorMode.Monochrome;
+            if (lblThreshold != null) lblThreshold.Visible = showThreshold;
+            if (trkThreshold != null) trkThreshold.Visible = showThreshold;
+            if (lblThresholdValue != null) lblThresholdValue.Visible = showThreshold;
         }
 
         private void UpdateModeUI()
@@ -951,6 +1081,75 @@ namespace KindleToPDF
             }
         }
 
+        private void BtnBrowseDir_Click(object? sender, EventArgs e)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                if (!string.IsNullOrEmpty(txtOutputDir.Text) && Directory.Exists(txtOutputDir.Text))
+                {
+                    fbd.SelectedPath = txtOutputDir.Text;
+                }
+                
+                if (fbd.ShowDialog() == DialogResult.OK)
+                {
+                    txtOutputDir.Text = fbd.SelectedPath;
+                    _settings.OutputDirectory = fbd.SelectedPath;
+                }
+            }
+        }
+
+        private void RbNamingMode_CheckedChanged(object? sender, EventArgs e)
+        {
+            UpdateSequentialUI();
+            if (rbOverwrite.Checked) _settings.Mode = FileNameMode.Overwrite;
+            else if (rbSequential.Checked) _settings.Mode = FileNameMode.Sequential;
+        }
+
+        private void CmbSeqType_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (cmbSeqType.SelectedIndex < 0) return;
+            _settings.SeqType = (SequentialType)cmbSeqType.SelectedIndex;
+            UpdateSequentialUI();
+        }
+
+        private void UpdateSequentialUI()
+        {
+            bool isSequential = rbSequential.Checked;
+            pnlSequential.Enabled = isSequential;
+
+            if (!isSequential) return;
+
+            SequentialType type = (SequentialType)cmbSeqType.SelectedIndex;
+            
+            // Hide all specific controls first
+            numStartNumber.Visible = false;
+            numDigits.Visible = false;
+            txtStartChar.Visible = false;
+            cmbSeqFormat.Visible = false;
+            
+            switch (type)
+            {
+                case SequentialType.Number:
+                    numStartNumber.Visible = true;
+                    numDigits.Visible = true;
+                    break;
+                case SequentialType.Alphabet:
+                    txtStartChar.Visible = true;
+                    break;
+                case SequentialType.DateTime:
+                    cmbSeqFormat.Visible = true;
+                    if (cmbSeqFormat.Items.Count == 0)
+                    {
+                        cmbSeqFormat.Items.AddRange(new object[] { "_yyyyMMdd", "_HHmmss", "_yyyyMMdd_HHmmss" });
+                        if (string.IsNullOrEmpty(_settings.DateTimeFormat))
+                             cmbSeqFormat.SelectedIndex = 0;
+                        else
+                             cmbSeqFormat.Text = _settings.DateTimeFormat;
+                    }
+                    break;
+            }
+        }
+
         private bool _updatingCropTextBoxes = false;
 
         private void TxtCrop_TextChanged(object? sender, EventArgs e)
@@ -1039,36 +1238,7 @@ namespace KindleToPDF
             }
         }
 
-        private void BtnNamingOptions_Click(object? sender, EventArgs e)
-        {
-            // Temporarily disable TopMost and hide overlay to prevent Z-order issues
-            bool wasTopMost = this.TopMost;
-            this.TopMost = false;
-            _guidelineOverlay?.Hide();
 
-            try
-            {
-                using (var form = new NamingOptionsForm(_settings))
-                {
-                    if (form.ShowDialog(this) == DialogResult.OK)
-                    {
-                        _settings.Save();
-                        Log("Naming options updated.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log($"Error opening options: {ex.Message}");
-                MessageBox.Show($"Failed to open options: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                // Restore state
-                this.TopMost = wasTopMost;
-                _guidelineOverlay?.Show();
-            }
-        }
 
         private async void BtnStart_Click(object? sender, EventArgs e)
         {
@@ -1539,13 +1709,42 @@ namespace KindleToPDF
             }
 
             Log("Creating PDF...");
+            Log("Creating PDF...");
             string baseOutputPath = txtOutput.Text;
-            if (!Path.IsPathRooted(baseOutputPath))
+            string outputDir = _settings.OutputDirectory;
+
+            if (string.IsNullOrEmpty(outputDir))
             {
-                baseOutputPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, baseOutputPath);
+                // If output directory is empty, use base directory or Documents?
+                // Let's use BaseDirectory if not specified, or keep relative path logic
+                if (!Path.IsPathRooted(baseOutputPath))
+                {
+                    outputDir = AppDomain.CurrentDomain.BaseDirectory;
+                }
+                else
+                {
+                    outputDir = Path.GetDirectoryName(baseOutputPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+                    baseOutputPath = Path.GetFileName(baseOutputPath);
+                }
             }
             
-            string finalOutputPath = GetOutputFilePath(baseOutputPath);
+            // Ensure directory exists
+            if (!Directory.Exists(outputDir))
+            {
+                try 
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+                catch (Exception ex)
+                {
+                    Log($"Error creating output directory: {ex.Message}");
+                    MessageBox.Show($"Failed to create output directory: {ex.Message}");
+                    return;
+                }
+            }
+
+            string fullPath = Path.Combine(outputDir, baseOutputPath);
+            string finalOutputPath = GetOutputFilePath(fullPath);
 
             double dpi = 0;
             string dpiStr = (string)(Invoke(new Func<string>(() => cmbDpi.SelectedItem?.ToString() ?? "Default")) ?? "Default");
@@ -1553,7 +1752,7 @@ namespace KindleToPDF
 
             await Task.Run(() =>
             {
-                _pdfGenerator.CreatePdf(_capturedImages, finalOutputPath, dpi, _settings.ColorMode, _settings.JpegQuality, _settings.ImageFormat);
+                _pdfGenerator.CreatePdf(_capturedImages, finalOutputPath, dpi, _settings.ColorMode, _settings.JpegQuality, _settings.ImageFormat, _settings.MonochromeThreshold);
             });
             Log($"PDF saved to {finalOutputPath}");
             MessageBox.Show($"PDF creation complete!\nSaved to: {finalOutputPath}");

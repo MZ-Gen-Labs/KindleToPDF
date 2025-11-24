@@ -34,8 +34,10 @@ namespace KindleToPDF
         public ImageColorMode ColorMode { get; set; } = ImageColorMode.Grayscale;
         public PdfImageFormat ImageFormat { get; set; } = PdfImageFormat.Jpeg;
         public int JpegQuality { get; set; } = 80; // 60-100
+        public int MonochromeThreshold { get; set; } = 180; // 0-255, default 180 for better text visibility
         
         // Naming Options
+        public string OutputDirectory { get; set; } = ""; // Default to empty (use current directory or Documents)
         public FileNameMode Mode { get; set; } = FileNameMode.Sequential;
         public SequentialType SeqType { get; set; } = SequentialType.Number;
         public int StartNumber { get; set; } = 1;

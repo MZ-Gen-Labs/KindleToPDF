@@ -22,11 +22,12 @@ namespace KindleToPDF
         /// <param name="dpi">Target DPI (0 for default)</param>
         /// <param name="colorMode">Image color mode for compression</param>
         /// <param name="format">Image format (Jpeg or Png)</param>
-        public void CreatePdf(List<string> imagePaths, string outputPdfPath, double dpi = 0, ImageColorMode colorMode = ImageColorMode.FullColor, int jpegQuality = 80, PdfImageFormat format = PdfImageFormat.Jpeg)
+        /// <param name="monochromeThreshold">Threshold for monochrome conversion (0-255)</param>
+        public void CreatePdf(List<string> imagePaths, string outputPdfPath, double dpi = 0, ImageColorMode colorMode = ImageColorMode.FullColor, int jpegQuality = 80, PdfImageFormat format = PdfImageFormat.Jpeg, int monochromeThreshold = 128)
         {
             try
             {
-                Logger.Info($"CreatePdf: Start. Files={imagePaths.Count}, Out={outputPdfPath}, Mode={colorMode}, Format={format}");
+                Logger.Info($"CreatePdf: Start. Files={imagePaths.Count}, Out={outputPdfPath}, Mode={colorMode}, Format={format}, Threshold={monochromeThreshold}");
                 
                 using (PdfDocument document = new PdfDocument())
                 {
@@ -46,7 +47,7 @@ namespace KindleToPDF
                         try
                         {
                             // Process image based on color mode and format
-                            processedImagePath = ProcessImage(imagePath, colorMode, jpegQuality, format);
+                            processedImagePath = ProcessImage(imagePath, colorMode, jpegQuality, format, monochromeThreshold);
                             if (processedImagePath != imagePath) isTempFile = true;
 
                             PdfPage page = document.AddPage();
@@ -104,7 +105,7 @@ namespace KindleToPDF
             }
         }
 
-        private string ProcessImage(string imagePath, ImageColorMode colorMode, int jpegQuality, PdfImageFormat format)
+        private string ProcessImage(string imagePath, ImageColorMode colorMode, int jpegQuality, PdfImageFormat format, int monochromeThreshold)
         {
             // If full color and PNG format, no processing needed (assuming input is PNG or compatible)
             // But we might want to ensure it is PNG if format is PNG.
@@ -123,7 +124,7 @@ namespace KindleToPDF
                     switch (colorMode)
                     {
                         case ImageColorMode.Monochrome:
-                            processed = ConvertToMonochrome(original);
+                            processed = ConvertToMonochrome(original, monochromeThreshold);
                             break;
                         case ImageColorMode.Grayscale:
                             processed = ConvertToGrayscale(original);
@@ -171,7 +172,7 @@ namespace KindleToPDF
         /// <summary>
         /// Converts an image to monochrome (1-bit) using thresholding
         /// </summary>
-        private Bitmap ConvertToMonochrome(Bitmap original)
+        private Bitmap ConvertToMonochrome(Bitmap original, int threshold)
         {
             Bitmap bmp = new Bitmap(original.Width, original.Height, PixelFormat.Format1bppIndexed);
             
@@ -206,7 +207,7 @@ namespace KindleToPDF
                         byte r = srcBuffer[srcIdx + 2];
                         int gray = (int)(r * Constants.RED_WEIGHT + g * Constants.GREEN_WEIGHT + b * Constants.BLUE_WEIGHT);
 
-                        if (gray > Constants.IMAGE_THRESHOLD)
+                        if (gray > threshold)
                         {
                             // Set bit to 1 (White)
                             int destIdx = y * destStride + (x >> 3); // x / 8
