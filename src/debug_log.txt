@@ -1,8 +1,0 @@
-Form1 Ctor: Start
-Form1 Ctor: Settings Loaded
-Form1 Ctor: InitializeComponent Done
-Form1 Ctor: InitializeCustomControls Done
-Form1 Ctor: ApplySettingsToUI Done
-Form1 Ctor: Overlay Done
-CreatePdf: Start. Files=3, Out=C:\Git\KindleToPDF\src\bin\Debug\net10.0-windows\output__220203.pdf, Mode=Grayscale
-CreatePdf: Saved successfully.
