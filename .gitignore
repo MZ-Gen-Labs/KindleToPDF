@@ -234,3 +234,6 @@ ServiceFabricBackup/
 $RECYCLE.BIN/
 System\ Volume\ Information/
 Thumbs.db
+
+# Temporary files folder
+tmp/
