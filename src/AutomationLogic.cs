@@ -271,6 +271,57 @@ namespace KindleToPDF
         }
 
         /// <summary>
+        /// Maximizes the Kindle window
+        /// </summary>
+        /// <param name="hWnd">Window handle</param>
+        public void MaximizeKindleWindow(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero)
+            {
+                Logger.Warning("Cannot maximize window: invalid handle");
+                return;
+            }
+
+            // First restore if minimized
+            if (IsIconic(hWnd))
+            {
+                Logger.Info("Window is minimized, restoring first...");
+                ShowWindow(hWnd, Constants.SW_RESTORE);
+                Thread.Sleep(500); // Longer delay for restore
+                
+                // Bring to foreground after restore
+                SetForegroundWindow(hWnd);
+                Thread.Sleep(300); // Additional delay to ensure window is active
+            }
+
+            // Maximize the window
+            ShowWindow(hWnd, Constants.SW_MAXIMIZE);
+            Thread.Sleep(Constants.WINDOW_RESTORE_DELAY_MS);
+            
+            // Bring to foreground to ensure it's active
+            SetForegroundWindow(hWnd);
+            Thread.Sleep(100); // Final delay to ensure focus
+            
+            Logger.Info("Kindle window maximized");
+        }
+
+        /// <summary>
+        /// Minimizes the Kindle window
+        /// </summary>
+        /// <param name="hWnd">Window handle</param>
+        public void MinimizeKindleWindow(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero)
+            {
+                Logger.Warning("Cannot minimize window: invalid handle");
+                return;
+            }
+
+            ShowWindow(hWnd, Constants.SW_MINIMIZE);
+            Logger.Info("Kindle window minimized");
+        }
+
+        /// <summary>
         /// Extracts the book title from the Kindle window title
         /// </summary>
         /// <param name="hWnd">Window handle</param>

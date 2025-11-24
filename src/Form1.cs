@@ -16,14 +16,9 @@ namespace KindleToPDF
         private CancellationTokenSource _cts = null!;
         private List<string> _capturedImages = null!;
 
-        private Button btnStart = null!;
-        private Button btnStop = null!;
-        private Button btnAbort = null!;
-        private Button btnTop = null!;
-        private Button btnPrev = null!;
-        private Button btnNext = null!;
-        private Button btnBottom = null!;
-        private Button btnFullScreen = null!;
+        private Button btnStart = null!, btnStop = null!, btnAbort = null!;
+        private Button btnTop = null!, btnPrev = null!, btnNext = null!, btnBottom = null!, btnFullScreen = null!;
+        private Button btnMaximize = null!, btnMinimize = null!;
         private Label lblInterval = null!;
         private TextBox txtInterval = null!;
         private Label lblPages = null!;
@@ -604,6 +599,26 @@ namespace KindleToPDF
             };
             btnFullScreen.Click += BtnFullScreen_Click;
             grpNavigation.Controls.Add(btnFullScreen);
+
+            btnMaximize = new Button 
+            { 
+                Text = "Maximize", 
+                Location = new Point(120, 60), 
+                Size = new Size(80, 30),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
+            btnMaximize.Click += BtnMaximize_Click;
+            grpNavigation.Controls.Add(btnMaximize);
+
+            btnMinimize = new Button 
+            { 
+                Text = "Minimize", 
+                Location = new Point(210, 60), 
+                Size = new Size(80, 30),
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
+            btnMinimize.Click += BtnMinimize_Click;
+            grpNavigation.Controls.Add(btnMinimize);
 
             y += 120;
 
@@ -1519,6 +1534,34 @@ namespace KindleToPDF
                 Thread.Sleep(100); // Wait for full screen toggle
                 _automation.BringWindowToFront(kindleHandle); // Bring to front again after toggle
                 Log("Toggled Full Screen (F11).");
+            }
+            else
+            {
+                Log("Kindle window not found.");
+            }
+        }
+
+        private void BtnMaximize_Click(object? sender, EventArgs e)
+        {
+            IntPtr kindleHandle = _automation.GetKindleWindow();
+            if (kindleHandle != IntPtr.Zero)
+            {
+                _automation.MaximizeKindleWindow(kindleHandle);
+                Log("Kindle window maximized.");
+            }
+            else
+            {
+                Log("Kindle window not found.");
+            }
+        }
+
+        private void BtnMinimize_Click(object? sender, EventArgs e)
+        {
+            IntPtr kindleHandle = _automation.GetKindleWindow();
+            if (kindleHandle != IntPtr.Zero)
+            {
+                _automation.MinimizeKindleWindow(kindleHandle);
+                Log("Kindle window minimized.");
             }
             else
             {

@@ -21,6 +21,8 @@ namespace KindleToPDF
 
         // Window Styles
         public const int SW_RESTORE = 9;
+        public const int SW_MAXIMIZE = 3;
+        public const int SW_MINIMIZE = 6;
         public const int GWL_EXSTYLE = -20;
         public const int WS_EX_LAYERED = 0x80000;
         public const int WS_EX_TRANSPARENT = 0x20;
