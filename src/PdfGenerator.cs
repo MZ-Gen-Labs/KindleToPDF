@@ -141,12 +141,15 @@ namespace KindleToPDF
                     if (colorMode == ImageColorMode.HighColor || colorMode == ImageColorMode.FullColor)
                     {
                         tempPath += ".jpg";
-                        SaveAsJpeg(processed, tempPath, jpegQuality);
+                        if (processed != null)
+                        {
+                            SaveAsJpeg(processed, tempPath, jpegQuality);
+                        }
                     }
                     else
                     {
                         tempPath += ".png";
-                        processed.Save(tempPath, ImageFormat.Png);
+                        processed?.Save(tempPath, ImageFormat.Png);
                     }
 
                     return tempPath;
@@ -294,7 +297,7 @@ namespace KindleToPDF
             EncoderParameters encoderParams = new EncoderParameters(1);
             encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, quality);
 
-            ImageCodecInfo jpegCodec = GetEncoderInfo("image/jpeg");
+            ImageCodecInfo? jpegCodec = GetEncoderInfo("image/jpeg");
             if (jpegCodec != null)
             {
                 image.Save(path, jpegCodec, encoderParams);
