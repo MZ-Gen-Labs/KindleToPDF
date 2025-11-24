@@ -56,3 +56,4 @@ Kindle for PC のページめくり、画面キャプチャ、PDF作成を自動
 ## ライセンス
 
 MIT License
+
