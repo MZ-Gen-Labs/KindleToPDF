@@ -44,7 +44,7 @@ namespace KindleToPDF
                         if (!File.Exists(imagePath)) continue;
 
                         string processedImagePath = imagePath;
-                        bool isTempFile = false;
+
 
                         try
                         {
@@ -56,7 +56,7 @@ namespace KindleToPDF
                             {
                                 var splitPages = SplitImage(imagePath, isRightToLeft);
                                 pagesToAdd.AddRange(splitPages);
-                                if (splitPages.Count > 0) isTempFile = true; // Split pages are temp files
+
                             }
                             else
                             {

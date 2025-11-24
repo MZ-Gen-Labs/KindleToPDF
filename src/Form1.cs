@@ -37,8 +37,9 @@ namespace KindleToPDF
         private CheckBox chkAlwaysOnTop = null!;
         private Label lblDpi = null!;
         private ComboBox cmbDpi = null!;
-        private Label lblDirection = null!;
-        private ComboBox cmbDirection = null!;
+        private GroupBox grpPageDirection = null!;
+        private RadioButton rbDirectionR2L = null!;
+        private RadioButton rbDirectionL2R = null!;
         private TextBox txtLog = null!;
         private Button btnSetCrop = null!;
 #pragma warning disable CS0414 // Field is assigned but its value is never used - false positive, these are used in event handlers
@@ -146,12 +147,12 @@ namespace KindleToPDF
                 if (cmbDpi != null && _settings.DpiIndex >= 0 && _settings.DpiIndex < cmbDpi.Items.Count)
                     cmbDpi.SelectedIndex = _settings.DpiIndex;
                 
-                if (cmbDirection != null)
+                if (rbDirectionR2L != null && rbDirectionL2R != null)
                 {
-                    if (_settings.PageDirection >= 0 && _settings.PageDirection < cmbDirection.Items.Count)
-                        cmbDirection.SelectedIndex = _settings.PageDirection;
+                    if (_settings.PageDirection == 1)
+                        rbDirectionL2R.Checked = true;
                     else
-                        cmbDirection.SelectedIndex = 0; // Default R2L
+                        rbDirectionR2L.Checked = true; // Default R2L
                 }
 
                 if (chkSplitDualPage != null) chkSplitDualPage.Checked = _settings.SplitDualPage;
@@ -288,7 +289,7 @@ namespace KindleToPDF
             _settings.StopAtLastPage = chkStopAtLastPage.Checked;
             _settings.AlwaysOnTop = chkAlwaysOnTop.Checked;
             _settings.DpiIndex = cmbDpi.SelectedIndex;
-            _settings.PageDirection = cmbDirection.SelectedIndex;
+            _settings.PageDirection = rbDirectionL2R.Checked ? 1 : 0;
             _settings.SplitDualPage = chkSplitDualPage.Checked;
             _settings.ImageFormat = cmbImageFormat.SelectedIndex == 0 ? PdfImageFormat.Jpeg : PdfImageFormat.Png;
             _settings.MonochromeThreshold = trkThreshold.Value;
@@ -352,6 +353,39 @@ namespace KindleToPDF
 
 
 
+            // Capture Mode Selection - GroupBox (Moved to top)
+            GroupBox grpCaptureMode = new GroupBox
+            {
+                Text = "Capture Mode",
+                Location = new Point(10, y),
+                Size = new Size(450, 60), // Reduced height
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+            tabHome.Controls.Add(grpCaptureMode);
+
+            rbModeContinuous = new RadioButton 
+            { 
+                Text = "Continuous Auto Capture", 
+                Location = new Point(15, 25), 
+                AutoSize = true, 
+                Checked = true,
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
+            rbModeContinuous.CheckedChanged += (s, e) => UpdateModeUI();
+            grpCaptureMode.Controls.Add(rbModeContinuous);
+
+            rbModeManual = new RadioButton 
+            { 
+                Text = "Manual Selection Capture", 
+                Location = new Point(230, 25), // Horizontal alignment
+                AutoSize = true,
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
+            rbModeManual.CheckedChanged += (s, e) => UpdateModeUI();
+            grpCaptureMode.Controls.Add(rbModeManual);
+
+            y += 70;
+
             // Automation Settings - GroupBox (Moved from Settings tab)
             GroupBox grpAutomation = new GroupBox
             {
@@ -398,36 +432,7 @@ namespace KindleToPDF
 
             y += 100;
 
-            // Capture Mode Selection - GroupBox
-            GroupBox grpCaptureMode = new GroupBox
-            {
-                Text = "Capture Mode",
-                Location = new Point(10, y),
-                Size = new Size(450, 90),
-                Font = new Font(this.Font, FontStyle.Bold)
-            };
-            tabHome.Controls.Add(grpCaptureMode);
 
-            rbModeContinuous = new RadioButton 
-            { 
-                Text = "Continuous Auto Capture", 
-                Location = new Point(15, 25), 
-                AutoSize = true, 
-                Checked = true,
-                Font = new Font(this.Font, FontStyle.Regular)
-            };
-            rbModeContinuous.CheckedChanged += (s, e) => UpdateModeUI();
-            grpCaptureMode.Controls.Add(rbModeContinuous);
-
-            rbModeManual = new RadioButton 
-            { 
-                Text = "Manual Selection Capture", 
-                Location = new Point(15, 50), 
-                AutoSize = true,
-                Font = new Font(this.Font, FontStyle.Regular)
-            };
-            rbModeManual.CheckedChanged += (s, e) => UpdateModeUI();
-            grpCaptureMode.Controls.Add(rbModeManual);
 
             y += 100;
 
@@ -450,13 +455,7 @@ namespace KindleToPDF
             tabSettings.Controls.Add(lblDpi);
             tabSettings.Controls.Add(cmbDpi);
 
-            settingsY += 30;
-            lblDirection = new Label { Text = "Page Direction:", Location = new Point(20, settingsY), AutoSize = true };
-            cmbDirection = new ComboBox { Location = new Point(150, settingsY - 3), DropDownStyle = ComboBoxStyle.DropDownList, Width = 180 };
-            cmbDirection.Items.AddRange(new object[] { "Right to Left (JP)", "Left to Right (EN)" });
-            cmbDirection.SelectedIndex = 0;
-            tabSettings.Controls.Add(lblDirection);
-            tabSettings.Controls.Add(cmbDirection);
+
 
             settingsY += 30;
             chkSplitDualPage = new CheckBox { Text = "Split Dual Page (Auto-split)", Location = new Point(20, settingsY), AutoSize = true, Checked = false };
@@ -509,6 +508,37 @@ namespace KindleToPDF
                 _settings.MonochromeThreshold = trkThreshold.Value;
             };
             tabSettings.Controls.Add(trkThreshold);
+
+            // Page Direction - GroupBox
+            grpPageDirection = new GroupBox
+            {
+                Text = "Page Direction",
+                Location = new Point(10, y),
+                Size = new Size(450, 60),
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+            tabHome.Controls.Add(grpPageDirection);
+
+            rbDirectionR2L = new RadioButton 
+            { 
+                Text = "Right to Left (JP)", 
+                Location = new Point(15, 25), 
+                AutoSize = true, 
+                Checked = true,
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
+            grpPageDirection.Controls.Add(rbDirectionR2L);
+
+            rbDirectionL2R = new RadioButton 
+            { 
+                Text = "Left to Right (EN)", 
+                Location = new Point(200, 25), 
+                AutoSize = true,
+                Font = new Font(this.Font, FontStyle.Regular)
+            };
+            grpPageDirection.Controls.Add(rbDirectionL2R);
+
+            y += 70;
 
             // Adjust y for Home tab controls
             y += 10;
@@ -1294,7 +1324,7 @@ namespace KindleToPDF
             if (!int.TryParse(txtPages.Text, out int maxPages)) maxPages = 10;
             bool autoDetect = chkAutoDetect.Checked;
             bool stopAtLast = chkStopAtLastPage.Checked;
-            bool isRightToLeft = cmbDirection.SelectedIndex == 0;
+            bool isRightToLeft = rbDirectionR2L.Checked;
 
             if (_cts == null || _cts.IsCancellationRequested) _cts = new CancellationTokenSource();
             
@@ -1446,7 +1476,7 @@ namespace KindleToPDF
             if (kindleHandle != IntPtr.Zero)
             {
                 _automation.BringWindowToFront(kindleHandle);
-                bool isRightToLeft = cmbDirection.SelectedIndex == 0;
+                bool isRightToLeft = rbDirectionR2L.Checked;
                 _automation.SendPrevPage(kindleHandle, isRightToLeft);
                 Log("Sent Prev Page command.");
             }
@@ -1462,7 +1492,7 @@ namespace KindleToPDF
             if (kindleHandle != IntPtr.Zero)
             {
                 _automation.BringWindowToFront(kindleHandle);
-                bool isRightToLeft = cmbDirection.SelectedIndex == 0;
+                bool isRightToLeft = rbDirectionR2L.Checked;
                 _automation.SendNextPage(kindleHandle, isRightToLeft);
                 Log("Sent Next Page command.");
             }

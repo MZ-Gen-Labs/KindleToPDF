@@ -237,3 +237,5 @@ Thumbs.db
 
 # Temporary files folder
 tmp/
+src/build_log*.txt
+src/build_verbose.txt
