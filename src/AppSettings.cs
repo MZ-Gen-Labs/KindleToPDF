@@ -35,6 +35,7 @@ namespace KindleToPDF
         public PdfImageFormat ImageFormat { get; set; } = PdfImageFormat.Jpeg;
         public int JpegQuality { get; set; } = 80; // 60-100
         public int MonochromeThreshold { get; set; } = 180; // 0-255, default 180 for better text visibility
+        public bool SplitDualPage { get; set; } = false; // Auto-split dual pages
         
         // Naming Options
         public string OutputDirectory { get; set; } = ""; // Default to empty (use current directory or Documents)

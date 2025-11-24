@@ -23,11 +23,13 @@ namespace KindleToPDF
         /// <param name="colorMode">Image color mode for compression</param>
         /// <param name="format">Image format (Jpeg or Png)</param>
         /// <param name="monochromeThreshold">Threshold for monochrome conversion (0-255)</param>
-        public void CreatePdf(List<string> imagePaths, string outputPdfPath, double dpi = 0, ImageColorMode colorMode = ImageColorMode.FullColor, int jpegQuality = 80, PdfImageFormat format = PdfImageFormat.Jpeg, int monochromeThreshold = 128)
+        /// <param name="splitDualPage">Whether to split dual pages</param>
+        /// <param name="isRightToLeft">True for Right-to-Left (JP), False for Left-to-Right (EN)</param>
+        public void CreatePdf(List<string> imagePaths, string outputPdfPath, double dpi = 0, ImageColorMode colorMode = ImageColorMode.FullColor, int jpegQuality = 80, PdfImageFormat format = PdfImageFormat.Jpeg, int monochromeThreshold = 128, bool splitDualPage = false, bool isRightToLeft = true)
         {
             try
             {
-                Logger.Info($"CreatePdf: Start. Files={imagePaths.Count}, Out={outputPdfPath}, Mode={colorMode}, Format={format}, Threshold={monochromeThreshold}");
+                Logger.Info($"CreatePdf: Start. Files={imagePaths.Count}, Out={outputPdfPath}, Mode={colorMode}, Format={format}, Threshold={monochromeThreshold}, Split={splitDualPage}, R2L={isRightToLeft}");
                 
                 using (PdfDocument document = new PdfDocument())
                 {
@@ -47,29 +49,41 @@ namespace KindleToPDF
                         try
                         {
                             // Process image based on color mode and format
-                            processedImagePath = ProcessImage(imagePath, colorMode, jpegQuality, format, monochromeThreshold);
-                            if (processedImagePath != imagePath) isTempFile = true;
-
-                            PdfPage page = document.AddPage();
-                            using (XImage image = XImage.FromFile(processedImagePath))
+                            // Handle splitting if enabled
+                            List<string> pagesToAdd = new List<string>();
+                            
+                            if (splitDualPage)
                             {
-                                // If DPI is specified, adjust the size
-                                if (dpi > 0)
-                                {
-                                    // PDF points = (pixels / dpi) * 72
-                                    page.Width = XUnit.FromPoint((image.PixelWidth / dpi) * 72);
-                                    page.Height = XUnit.FromPoint((image.PixelHeight / dpi) * 72);
-                                }
-                                else
-                                {
-                                    // Use image's internal DPI or default
-                                    page.Width = XUnit.FromPoint(image.PointWidth);
-                                    page.Height = XUnit.FromPoint(image.PointHeight);
-                                }
+                                var splitPages = SplitImage(imagePath, isRightToLeft);
+                                pagesToAdd.AddRange(splitPages);
+                                if (splitPages.Count > 0) isTempFile = true; // Split pages are temp files
+                            }
+                            else
+                            {
+                                pagesToAdd.Add(imagePath);
+                            }
 
-                                using (XGraphics gfx = XGraphics.FromPdfPage(page))
+                            foreach (var pagePath in pagesToAdd)
+                            {
+                                string finalPath = pagePath;
+                                bool isProcessedTemp = false;
+
+                                // Process image (compression/color mode)
+                                finalPath = ProcessImage(pagePath, colorMode, jpegQuality, format, monochromeThreshold);
+                                if (finalPath != pagePath) isProcessedTemp = true;
+
+                                AddPageToDocument(document, finalPath, dpi);
+
+                                // Cleanup processed temp file
+                                if (isProcessedTemp && File.Exists(finalPath))
                                 {
-                                    gfx.DrawImage(image, 0, 0, page.Width.Point, page.Height.Point);
+                                    try { File.Delete(finalPath); } catch { }
+                                }
+                                
+                                // Cleanup split temp file
+                                if (splitDualPage && File.Exists(pagePath))
+                                {
+                                    try { File.Delete(pagePath); } catch { }
                                 }
                             }
                         }
@@ -79,18 +93,7 @@ namespace KindleToPDF
                         }
                         finally
                         {
-                            // Clean up processed image if it's a temp file
-                            if (isTempFile && File.Exists(processedImagePath))
-                            {
-                                try 
-                                { 
-                                    File.Delete(processedImagePath); 
-                                } 
-                                catch (Exception ex) 
-                                { 
-                                    Logger.Warning($"Failed to delete temp file {processedImagePath}: {ex.Message}");
-                                }
-                            }
+                            // Original cleanup logic was here, but now handled inside loop
                         }
                     }
 
@@ -103,6 +106,81 @@ namespace KindleToPDF
                 Logger.Error($"Critical error in CreatePdf: {ex.Message}", ex);
                 throw;
             }
+        }
+
+        private void AddPageToDocument(PdfDocument document, string imagePath, double dpi)
+        {
+            PdfPage page = document.AddPage();
+            using (XImage image = XImage.FromFile(imagePath))
+            {
+                if (dpi > 0)
+                {
+                    page.Width = XUnit.FromPoint((image.PixelWidth / dpi) * 72);
+                    page.Height = XUnit.FromPoint((image.PixelHeight / dpi) * 72);
+                }
+                else
+                {
+                    page.Width = XUnit.FromPoint(image.PointWidth);
+                    page.Height = XUnit.FromPoint(image.PointHeight);
+                }
+
+                using (XGraphics gfx = XGraphics.FromPdfPage(page))
+                {
+                    gfx.DrawImage(image, 0, 0, page.Width.Point, page.Height.Point);
+                }
+            }
+        }
+
+        private List<string> SplitImage(string imagePath, bool isRightToLeft)
+        {
+            List<string> splitFiles = new List<string>();
+            try
+            {
+                using (Bitmap original = new Bitmap(imagePath))
+                {
+                    int width = original.Width;
+                    int height = original.Height;
+                    int halfWidth = width / 2;
+
+                    Rectangle leftRect = new Rectangle(0, 0, halfWidth, height);
+                    Rectangle rightRect = new Rectangle(halfWidth, 0, width - halfWidth, height);
+
+                    string tempDir = Path.GetTempPath();
+                    string leftPath = Path.Combine(tempDir, $"split_left_{Guid.NewGuid()}.png");
+                    string rightPath = Path.Combine(tempDir, $"split_right_{Guid.NewGuid()}.png");
+
+                    using (Bitmap leftBmp = original.Clone(leftRect, original.PixelFormat))
+                    {
+                        leftBmp.Save(leftPath, ImageFormat.Png);
+                    }
+
+                    using (Bitmap rightBmp = original.Clone(rightRect, original.PixelFormat))
+                    {
+                        rightBmp.Save(rightPath, ImageFormat.Png);
+                    }
+
+                    Logger.Info($"Split image: {imagePath} -> Left:{leftPath}, Right:{rightPath}, Order:{(isRightToLeft ? "R2L" : "L2R")}");
+
+                    if (isRightToLeft)
+                    {
+                        // Right page first (Page 1), then Left page (Page 2)
+                        splitFiles.Add(rightPath);
+                        splitFiles.Add(leftPath);
+                    }
+                    else
+                    {
+                        // Left page first (Page 1), then Right page (Page 2)
+                        splitFiles.Add(leftPath);
+                        splitFiles.Add(rightPath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Failed to split image {imagePath}: {ex.Message}", ex);
+                // Fallback: return empty list, caller should handle original
+            }
+            return splitFiles;
         }
 
         private string ProcessImage(string imagePath, ImageColorMode colorMode, int jpegQuality, PdfImageFormat format, int monochromeThreshold)

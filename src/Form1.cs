@@ -68,6 +68,7 @@ namespace KindleToPDF
         private Label lblJpegQuality = null!;
         private TrackBar trkJpegQuality = null!;
         private Label lblJpegQualityValue = null!;
+        private CheckBox chkSplitDualPage = null!;
         private Label lblImageFormat = null!;
         private ComboBox cmbImageFormat = null!;
         private Label lblThreshold = null!;
@@ -152,6 +153,8 @@ namespace KindleToPDF
                     else
                         cmbDirection.SelectedIndex = 0; // Default R2L
                 }
+
+                if (chkSplitDualPage != null) chkSplitDualPage.Checked = _settings.SplitDualPage;
                 
                 // Load Capture Mode
                 if (rbModeContinuous != null && rbModeManual != null)
@@ -286,6 +289,7 @@ namespace KindleToPDF
             _settings.AlwaysOnTop = chkAlwaysOnTop.Checked;
             _settings.DpiIndex = cmbDpi.SelectedIndex;
             _settings.PageDirection = cmbDirection.SelectedIndex;
+            _settings.SplitDualPage = chkSplitDualPage.Checked;
             _settings.ImageFormat = cmbImageFormat.SelectedIndex == 0 ? PdfImageFormat.Jpeg : PdfImageFormat.Png;
             _settings.MonochromeThreshold = trkThreshold.Value;
             _settings.CropRect = _cropRect;
@@ -453,6 +457,10 @@ namespace KindleToPDF
             cmbDirection.SelectedIndex = 0;
             tabSettings.Controls.Add(lblDirection);
             tabSettings.Controls.Add(cmbDirection);
+
+            settingsY += 30;
+            chkSplitDualPage = new CheckBox { Text = "Split Dual Page (Auto-split)", Location = new Point(20, settingsY), AutoSize = true, Checked = false };
+            tabSettings.Controls.Add(chkSplitDualPage);
 
             settingsY += 30;
             lblColorMode = new Label { Text = "Image Quality:", Location = new Point(20, settingsY), AutoSize = true };
@@ -1762,9 +1770,13 @@ namespace KindleToPDF
             string dpiStr = (string)(Invoke(new Func<string>(() => cmbDpi.SelectedItem?.ToString() ?? "Default")) ?? "Default");
             if (dpiStr != "Default" && double.TryParse(dpiStr, out double d)) dpi = d;
 
+            bool isRightToLeft = _settings.PageDirection == 0; // 0 is R2L
+
+            Log($"PDF Generation: SplitDualPage={_settings.SplitDualPage}, PageDirection={(_settings.PageDirection == 0 ? "R2L" : "L2R")}, Images={_capturedImages.Count}");
+
             await Task.Run(() =>
             {
-                _pdfGenerator.CreatePdf(_capturedImages, finalOutputPath, dpi, _settings.ColorMode, _settings.JpegQuality, _settings.ImageFormat, _settings.MonochromeThreshold);
+                _pdfGenerator.CreatePdf(_capturedImages, finalOutputPath, dpi, _settings.ColorMode, _settings.JpegQuality, _settings.ImageFormat, _settings.MonochromeThreshold, _settings.SplitDualPage, isRightToLeft);
             });
             Log($"PDF saved to {finalOutputPath}");
             MessageBox.Show($"PDF creation complete!\nSaved to: {finalOutputPath}");

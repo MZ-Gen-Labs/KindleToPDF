@@ -1,0 +1,13 @@
+  蠕ｩ蜈・ｯｾ雎｡縺ｮ繝励Ο繧ｸ繧ｧ繧ｯ繝医ｒ豎ｺ螳壹＠縺ｦ縺・∪縺・..
+  蠕ｩ蜈・ｯｾ雎｡縺ｮ縺吶∋縺ｦ縺ｮ繝励Ο繧ｸ繧ｧ繧ｯ繝医・譛譁ｰ縺ｧ縺吶・
+C:\Git\KindleToPDF\src\Form1.cs(1765,24): error CS0111: 蝙・'Form1' 縺ｯ縲・GetOutputFilePath' 縺ｨ蜻ｼ縺ｰ繧後ｋ繝｡繝ｳ繝舌・繧貞酔縺倥ヱ繝ｩ繝｡繝ｼ繧ｿ繝ｼ縺ｮ蝙九〒譌｢縺ｫ螳夂ｾｩ縺励※縺・∪縺・[C:\Git\KindleToPDF\src\KindleToPDF.csproj]
+C:\Git\KindleToPDF\src\Form1.cs(1825,24): error CS0111: 蝙・'Form1' 縺ｯ縲・IncrementAlphabet' 縺ｨ蜻ｼ縺ｰ繧後ｋ繝｡繝ｳ繝舌・繧貞酔縺倥ヱ繝ｩ繝｡繝ｼ繧ｿ繝ｼ縺ｮ蝙九〒譌｢縺ｫ螳夂ｾｩ縺励※縺・∪縺・[C:\Git\KindleToPDF\src\KindleToPDF.csproj]
+
+繝薙Ν繝峨↓螟ｱ謨励＠縺ｾ縺励◆縲・
+
+C:\Git\KindleToPDF\src\Form1.cs(1765,24): error CS0111: 蝙・'Form1' 縺ｯ縲・GetOutputFilePath' 縺ｨ蜻ｼ縺ｰ繧後ｋ繝｡繝ｳ繝舌・繧貞酔縺倥ヱ繝ｩ繝｡繝ｼ繧ｿ繝ｼ縺ｮ蝙九〒譌｢縺ｫ螳夂ｾｩ縺励※縺・∪縺・[C:\Git\KindleToPDF\src\KindleToPDF.csproj]
+C:\Git\KindleToPDF\src\Form1.cs(1825,24): error CS0111: 蝙・'Form1' 縺ｯ縲・IncrementAlphabet' 縺ｨ蜻ｼ縺ｰ繧後ｋ繝｡繝ｳ繝舌・繧貞酔縺倥ヱ繝ｩ繝｡繝ｼ繧ｿ繝ｼ縺ｮ蝙九〒譌｢縺ｫ螳夂ｾｩ縺励※縺・∪縺・[C:\Git\KindleToPDF\src\KindleToPDF.csproj]
+    0 蛟九・隴ｦ蜻・
+    2 繧ｨ繝ｩ繝ｼ
+
+邨碁℃譎る俣 00:00:00.99
