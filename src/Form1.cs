@@ -18,6 +18,7 @@ namespace KindleToPDF
 
         private Button btnStart = null!;
         private Button btnStop = null!;
+        private Button btnAbort = null!;
         private Button btnTop = null!;
         private Button btnPrev = null!;
         private Button btnNext = null!;
@@ -243,29 +244,53 @@ namespace KindleToPDF
 
         private void InitializeCustomControls()
         {
-            this.Size = new Size(450, 900); // Increased height for new controls
+            this.Size = new Size(500, 850); // Increased height for new controls
             this.Text = "Kindle to PDF Automation";
 
+            // Create TabControl
+            TabControl tabControl = new TabControl
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Point(10, 5)
+            };
+            this.Controls.Add(tabControl);
+
+            // Create Tabs
+            TabPage tabHome = new TabPage("Home");
+            tabHome.Padding = new Padding(10);
+            tabHome.AutoScroll = true; // Allow scrolling if controls overflow
+            tabControl.TabPages.Add(tabHome);
+
+            TabPage tabSettings = new TabPage("Settings");
+            tabControl.TabPages.Add(tabSettings);
+
+            TabPage tabCrop = new TabPage("Crop");
+            tabControl.TabPages.Add(tabCrop);
+
+            TabPage tabLog = new TabPage("Log");
+            tabControl.TabPages.Add(tabLog);
+
+            // Move all existing controls to tabHome
             int y = 15;
 
             // Capture Mode Selection
             Label lblMode = new Label { Text = "Capture Mode:", Location = new Point(20, y), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
-            this.Controls.Add(lblMode);
+            tabHome.Controls.Add(lblMode);
             y += 22;
 
             rbModeContinuous = new RadioButton { Text = "Continuous Auto Capture", Location = new Point(30, y), AutoSize = true, Checked = true };
             rbModeContinuous.CheckedChanged += (s, e) => UpdateModeUI();
-            this.Controls.Add(rbModeContinuous);
+            tabHome.Controls.Add(rbModeContinuous);
             y += 22;
 
             rbModeManual = new RadioButton { Text = "Manual Selection Capture", Location = new Point(30, y), AutoSize = true };
             rbModeManual.CheckedChanged += (s, e) => UpdateModeUI();
-            this.Controls.Add(rbModeManual);
+            tabHome.Controls.Add(rbModeManual);
             y += 28;
 
             // Separator
             Label lblSeparator1 = new Label { Text = "━━━━━━━━━━━━━━━━━━━━━━━━━━━", Location = new Point(20, y), AutoSize = true, ForeColor = Color.Gray };
-            this.Controls.Add(lblSeparator1);
+            tabHome.Controls.Add(lblSeparator1);
             y += 22;
 
             // 1. Auto-detect Page Turn (Moved up)
@@ -275,7 +300,7 @@ namespace KindleToPDF
                 txtInterval.Enabled = !chkAutoDetect.Checked;
                 lblInterval.Enabled = !chkAutoDetect.Checked;
             };
-            this.Controls.Add(chkAutoDetect);
+            tabHome.Controls.Add(chkAutoDetect);
 
             y += 25;
             // 2. Interval (Moved down)
@@ -284,8 +309,8 @@ namespace KindleToPDF
             // Initialize enabled state
             txtInterval.Enabled = !chkAutoDetect.Checked;
             lblInterval.Enabled = !chkAutoDetect.Checked;
-            this.Controls.Add(lblInterval);
-            this.Controls.Add(txtInterval);
+            tabHome.Controls.Add(lblInterval);
+            tabHome.Controls.Add(txtInterval);
 
             y += 30;
             // 3. Stop at Last Page (Moved up)
@@ -295,7 +320,7 @@ namespace KindleToPDF
                 txtPages.Enabled = !chkStopAtLastPage.Checked;
                 lblPages.Enabled = !chkStopAtLastPage.Checked;
             };
-            this.Controls.Add(chkStopAtLastPage);
+            tabHome.Controls.Add(chkStopAtLastPage);
 
             y += 25;
             // 4. Page Count (Moved down)
@@ -304,29 +329,29 @@ namespace KindleToPDF
             // Initialize enabled state
             txtPages.Enabled = !chkStopAtLastPage.Checked;
             lblPages.Enabled = !chkStopAtLastPage.Checked;
-            this.Controls.Add(lblPages);
-            this.Controls.Add(txtPages);
+            tabHome.Controls.Add(lblPages);
+            tabHome.Controls.Add(txtPages);
 
             y += 30;
             chkAlwaysOnTop = new CheckBox { Text = "Always on Top", Location = new Point(20, y), AutoSize = true, Checked = true };
             chkAlwaysOnTop.CheckedChanged += (s, e) => { this.TopMost = chkAlwaysOnTop.Checked; };
-            this.Controls.Add(chkAlwaysOnTop);
+            tabHome.Controls.Add(chkAlwaysOnTop);
 
             y += 30;
             lblDpi = new Label { Text = "PDF DPI:", Location = new Point(20, y), AutoSize = true };
             cmbDpi = new ComboBox { Location = new Point(150, y - 3), DropDownStyle = ComboBoxStyle.DropDownList };
             cmbDpi.Items.AddRange(new object[] { "Default", "300", "450", "600" });
             cmbDpi.SelectedIndex = 0;
-            this.Controls.Add(lblDpi);
-            this.Controls.Add(cmbDpi);
+            tabHome.Controls.Add(lblDpi);
+            tabHome.Controls.Add(cmbDpi);
 
             y += 30;
             lblDirection = new Label { Text = "Page Direction:", Location = new Point(20, y), AutoSize = true };
             cmbDirection = new ComboBox { Location = new Point(150, y - 3), DropDownStyle = ComboBoxStyle.DropDownList, Width = 180 };
             cmbDirection.Items.AddRange(new object[] { "Right to Left (JP)", "Left to Right (EN)" });
             cmbDirection.SelectedIndex = 0;
-            this.Controls.Add(lblDirection);
-            this.Controls.Add(cmbDirection);
+            tabHome.Controls.Add(lblDirection);
+            tabHome.Controls.Add(cmbDirection);
 
             y += 30;
             lblColorMode = new Label { Text = "Image Quality:", Location = new Point(20, y), AutoSize = true };
@@ -334,14 +359,14 @@ namespace KindleToPDF
             cmbColorMode.Items.AddRange(new object[] { "Monochrome (1-bit)", "Grayscale (8-bit)", "256 Colors", "High Color (16-bit)", "Full Color (24-bit)" });
             cmbColorMode.SelectedIndex = 1; // Default to Grayscale
             cmbColorMode.SelectedIndexChanged += CmbColorMode_SelectedIndexChanged;
-            this.Controls.Add(lblColorMode);
-            this.Controls.Add(cmbColorMode);
+            tabHome.Controls.Add(lblColorMode);
+            tabHome.Controls.Add(cmbColorMode);
 
             y += 30;
             lblJpegQuality = new Label { Text = "JPEG Quality:", Location = new Point(20, y), AutoSize = true };
             lblJpegQualityValue = new Label { Text = "80", Location = new Point(340, y), AutoSize = true };
-            this.Controls.Add(lblJpegQuality);
-            this.Controls.Add(lblJpegQualityValue);
+            tabHome.Controls.Add(lblJpegQuality);
+            tabHome.Controls.Add(lblJpegQualityValue);
 
             y += 22;
             trkJpegQuality = new TrackBar { Location = new Point(20, y), Width = 300, Minimum = 60, Maximum = 100, Value = 80, TickFrequency = 10 };
@@ -350,145 +375,147 @@ namespace KindleToPDF
                 lblJpegQualityValue.Text = trkJpegQuality.Value.ToString();
                 _settings.JpegQuality = trkJpegQuality.Value;
             };
-            this.Controls.Add(trkJpegQuality);
+            tabHome.Controls.Add(trkJpegQuality);
 
             // JPEG quality controls visibility will be set in ApplySettingsToUI
 
             y += 35;
             btnTop = new Button { Text = "<< Top", Location = new Point(20, y), Size = new Size(80, 30) };
             btnTop.Click += BtnTop_Click;
-            this.Controls.Add(btnTop);
+            tabHome.Controls.Add(btnTop);
 
             btnPrev = new Button { Text = "< Prev", Location = new Point(110, y), Size = new Size(80, 30) };
             btnPrev.Click += BtnPrev_Click;
-            this.Controls.Add(btnPrev);
+            tabHome.Controls.Add(btnPrev);
 
             btnNext = new Button { Text = "Next >", Location = new Point(200, y), Size = new Size(80, 30) };
             btnNext.Click += BtnNext_Click;
-            this.Controls.Add(btnNext);
+            tabHome.Controls.Add(btnNext);
 
             btnFullScreen = new Button { Text = "Full Screen", Location = new Point(20, y + 35), Size = new Size(80, 30) };
             btnFullScreen.Click += BtnFullScreen_Click;
-            this.Controls.Add(btnFullScreen);
+            tabHome.Controls.Add(btnFullScreen);
 
             y += 35;
             btnBottom = new Button { Text = ">> Bottom", Location = new Point(290, y - 35), Size = new Size(80, 30) };
             btnBottom.Click += BtnBottom_Click;
-            this.Controls.Add(btnBottom);
+            tabHome.Controls.Add(btnBottom);
 
-            y += 35;
-            btnSetCrop = new Button { Text = "Set Crop Area", Location = new Point(20, y), Size = new Size(120, 30) };
+            // --- Crop Tab Controls ---
+            int cropY = 15;
+
+            btnSetCrop = new Button { Text = "Set Crop Area", Location = new Point(20, cropY), Size = new Size(120, 30) };
             btnSetCrop.Click += BtnSetCrop_Click;
-            this.Controls.Add(btnSetCrop);
+            tabCrop.Controls.Add(btnSetCrop);
 
-            y += 35;
-            Label lblPattern = new Label { Text = "Pattern:", Location = new Point(20, y), AutoSize = true };
-            this.Controls.Add(lblPattern);
+            cropY += 40;
+            Label lblPattern = new Label { Text = "Pattern:", Location = new Point(20, cropY), AutoSize = true };
+            tabCrop.Controls.Add(lblPattern);
 
-            cmbCropPatterns = new ComboBox { Location = new Point(80, y - 3), Width = 100, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbCropPatterns = new ComboBox { Location = new Point(80, cropY - 3), Width = 100, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbCropPatterns.SelectedIndexChanged += CmbCropPatterns_SelectedIndexChanged;
-            this.Controls.Add(cmbCropPatterns);
+            tabCrop.Controls.Add(cmbCropPatterns);
 
-            Label lblMaxPatterns = new Label { Text = "Max:", Location = new Point(200, y), AutoSize = true };
-            this.Controls.Add(lblMaxPatterns);
+            Label lblMaxPatterns = new Label { Text = "Max:", Location = new Point(200, cropY), AutoSize = true };
+            tabCrop.Controls.Add(lblMaxPatterns);
 
-            numMaxPatterns = new NumericUpDown { Location = new Point(240, y - 3), Width = 50, Minimum = 1, Maximum = 20, Value = 5 };
+            numMaxPatterns = new NumericUpDown { Location = new Point(240, cropY - 3), Width = 50, Minimum = 1, Maximum = 20, Value = 5 };
             numMaxPatterns.ValueChanged += NumMaxPatterns_ValueChanged;
-            this.Controls.Add(numMaxPatterns);
+            tabCrop.Controls.Add(numMaxPatterns);
 
-            y += 28;
-            Label lblCrop = new Label { Text = "Crop (px):", Location = new Point(20, y), AutoSize = true };
-            this.Controls.Add(lblCrop);
+            cropY += 30;
+            Label lblCrop = new Label { Text = "Crop (px):", Location = new Point(20, cropY), AutoSize = true };
+            tabCrop.Controls.Add(lblCrop);
             
-            lblCropLeft = new Label { Text = "L:", Location = new Point(20, y + 25), AutoSize = true };
-            txtCropLeft = new TextBox { Text = "0", Location = new Point(40, y + 22), Width = 50 };
+            lblCropLeft = new Label { Text = "L:", Location = new Point(20, cropY + 25), AutoSize = true };
+            txtCropLeft = new TextBox { Text = "0", Location = new Point(40, cropY + 22), Width = 50 };
             txtCropLeft.TextChanged += TxtCrop_TextChanged;
-            lblCropLeftMax = new Label { Text = "0", Location = new Point(40, y + 45), Width = 50, ForeColor = Color.Gray, Font = new Font(this.Font.FontFamily, 7) };
-            this.Controls.Add(lblCropLeft);
-            this.Controls.Add(txtCropLeft);
-            this.Controls.Add(lblCropLeftMax);
+            lblCropLeftMax = new Label { Text = "0", Location = new Point(40, cropY + 45), Width = 50, ForeColor = Color.Gray, Font = new Font(this.Font.FontFamily, 7) };
+            tabCrop.Controls.Add(lblCropLeft);
+            tabCrop.Controls.Add(txtCropLeft);
+            tabCrop.Controls.Add(lblCropLeftMax);
 
-            lblCropTop = new Label { Text = "T:", Location = new Point(100, y + 25), AutoSize = true };
-            txtCropTop = new TextBox { Text = "0", Location = new Point(120, y + 22), Width = 50 };
+            lblCropTop = new Label { Text = "T:", Location = new Point(100, cropY + 25), AutoSize = true };
+            txtCropTop = new TextBox { Text = "0", Location = new Point(120, cropY + 22), Width = 50 };
             txtCropTop.TextChanged += TxtCrop_TextChanged;
-            lblCropTopMax = new Label { Text = "0", Location = new Point(120, y + 45), Width = 50, ForeColor = Color.Gray, Font = new Font(this.Font.FontFamily, 7) };
-            this.Controls.Add(lblCropTop);
-            this.Controls.Add(txtCropTop);
-            this.Controls.Add(lblCropTopMax);
+            lblCropTopMax = new Label { Text = "0", Location = new Point(120, cropY + 45), Width = 50, ForeColor = Color.Gray, Font = new Font(this.Font.FontFamily, 7) };
+            tabCrop.Controls.Add(lblCropTop);
+            tabCrop.Controls.Add(txtCropTop);
+            tabCrop.Controls.Add(lblCropTopMax);
 
-            lblCropRight = new Label { Text = "R:", Location = new Point(180, y + 25), AutoSize = true };
-            txtCropRight = new TextBox { Text = "0", Location = new Point(200, y + 22), Width = 50 };
+            lblCropRight = new Label { Text = "R:", Location = new Point(180, cropY + 25), AutoSize = true };
+            txtCropRight = new TextBox { Text = "0", Location = new Point(200, cropY + 22), Width = 50 };
             txtCropRight.TextChanged += TxtCrop_TextChanged;
-            lblCropRightMax = new Label { Text = "", Location = new Point(200, y + 45), Width = 50, ForeColor = Color.Gray, Font = new Font(this.Font.FontFamily, 7) };
-            this.Controls.Add(lblCropRight);
-            this.Controls.Add(txtCropRight);
-            this.Controls.Add(lblCropRightMax);
+            lblCropRightMax = new Label { Text = "", Location = new Point(200, cropY + 45), Width = 50, ForeColor = Color.Gray, Font = new Font(this.Font.FontFamily, 7) };
+            tabCrop.Controls.Add(lblCropRight);
+            tabCrop.Controls.Add(txtCropRight);
+            tabCrop.Controls.Add(lblCropRightMax);
 
-            lblCropBottom = new Label { Text = "B:", Location = new Point(260, y + 25), AutoSize = true };
-            txtCropBottom = new TextBox { Text = "0", Location = new Point(280, y + 22), Width = 50 };
+            lblCropBottom = new Label { Text = "B:", Location = new Point(260, cropY + 25), AutoSize = true };
+            txtCropBottom = new TextBox { Text = "0", Location = new Point(280, cropY + 22), Width = 50 };
             txtCropBottom.TextChanged += TxtCrop_TextChanged;
-            lblCropBottomMax = new Label { Text = "", Location = new Point(280, y + 45), Width = 50, ForeColor = Color.Gray, Font = new Font(this.Font.FontFamily, 7) };
-            this.Controls.Add(lblCropBottom);
-            this.Controls.Add(txtCropBottom);
-            this.Controls.Add(lblCropBottomMax);
+            lblCropBottomMax = new Label { Text = "", Location = new Point(280, cropY + 45), Width = 50, ForeColor = Color.Gray, Font = new Font(this.Font.FontFamily, 7) };
+            tabCrop.Controls.Add(lblCropBottom);
+            tabCrop.Controls.Add(txtCropBottom);
+            tabCrop.Controls.Add(lblCropBottomMax);
 
             y += 75;
             lblOutput = new Label { Text = "Output PDF:", Location = new Point(20, y), AutoSize = true };
             txtOutput = new TextBox { Text = "output.pdf", Location = new Point(100, y - 3), Width = 150 };
-            this.Controls.Add(lblOutput);
-            this.Controls.Add(txtOutput);
+            tabHome.Controls.Add(lblOutput);
+            tabHome.Controls.Add(txtOutput);
 
             btnRefreshTitle = new Button { Text = "Refresh", Location = new Point(260, y - 5), Size = new Size(60, 25) };
             btnRefreshTitle.Click += BtnRefreshTitle_Click;
-            this.Controls.Add(btnRefreshTitle);
+            tabHome.Controls.Add(btnRefreshTitle);
 
             btnNamingOptions = new Button { Text = "Options", Location = new Point(330, y - 5), Size = new Size(60, 25) };
             btnNamingOptions.Click += BtnNamingOptions_Click;
-            this.Controls.Add(btnNamingOptions);
+            tabHome.Controls.Add(btnNamingOptions);
 
             y += 35;
             btnStart = new Button { Text = "Start", Location = new Point(50, y), Size = new Size(100, 40) };
             btnStart.Click += BtnStart_Click;
-            this.Controls.Add(btnStart);
+            tabHome.Controls.Add(btnStart);
 
             btnStop = new Button { Text = "Stop", Location = new Point(160, y), Size = new Size(100, 40), Enabled = false };
             btnStop.Click += BtnStop_Click;
-            this.Controls.Add(btnStop);
+            tabHome.Controls.Add(btnStop);
 
             btnAbort = new Button { Text = "Abort", Location = new Point(270, y), Size = new Size(80, 40), Enabled = false, BackColor = Color.LightPink };
             btnAbort.Click += BtnAbort_Click;
-            this.Controls.Add(btnAbort);
+            tabHome.Controls.Add(btnAbort);
 
             y += 45;
             // Manual Capture Mode Controls
             Label lblSeparator2 = new Label { Text = "━━━━━━━━━━━━━━━━━━━━━━━━━━━", Location = new Point(20, y), AutoSize = true, ForeColor = Color.Gray };
-            this.Controls.Add(lblSeparator2);
+            tabHome.Controls.Add(lblSeparator2);
             y += 22;
 
             lblCaptureCount = new Label { Text = "Captured: 0 pages", Location = new Point(20, y), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
-            this.Controls.Add(lblCaptureCount);
+            tabHome.Controls.Add(lblCaptureCount);
             y += 28;
 
             btnCapture = new Button { Text = "Capture Page", Location = new Point(20, y), Size = new Size(100, 35) };
             btnCapture.Click += BtnCapture_Click;
-            this.Controls.Add(btnCapture);
+            tabHome.Controls.Add(btnCapture);
 
             btnRemoveLast = new Button { Text = "Remove Last", Location = new Point(130, y), Size = new Size(100, 35) };
             btnRemoveLast.Click += BtnRemoveLast_Click;
-            this.Controls.Add(btnRemoveLast);
+            tabHome.Controls.Add(btnRemoveLast);
 
             y += 38;
             btnClearAll = new Button { Text = "Clear All", Location = new Point(20, y), Size = new Size(100, 35) };
             btnClearAll.Click += BtnClearAll_Click;
-            this.Controls.Add(btnClearAll);
+            tabHome.Controls.Add(btnClearAll);
 
             btnCreatePdf = new Button { Text = "Create PDF", Location = new Point(130, y), Size = new Size(100, 35), BackColor = Color.LightGreen };
             btnCreatePdf.Click += BtnCreatePdf_Click;
-            this.Controls.Add(btnCreatePdf);
+            tabHome.Controls.Add(btnCreatePdf);
 
             y += 40;
-            txtLog = new TextBox { Multiline = true, ScrollBars = ScrollBars.Vertical, Location = new Point(20, y), Size = new Size(340, 150), ReadOnly = true };
-            this.Controls.Add(txtLog);
+            txtLog = new TextBox { Multiline = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill, ReadOnly = true };
+            tabLog.Controls.Add(txtLog);
         }
 
         private void Log(string message)
@@ -977,8 +1004,6 @@ namespace KindleToPDF
                 }
             }
         }
-
-        private Button btnAbort = null!;
 
         private async void BtnStop_Click(object? sender, EventArgs e)
         {
