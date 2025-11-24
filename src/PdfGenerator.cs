@@ -21,12 +21,12 @@ namespace KindleToPDF
         /// <param name="outputPdfPath">Output PDF file path</param>
         /// <param name="dpi">Target DPI (0 for default)</param>
         /// <param name="colorMode">Image color mode for compression</param>
-        /// <param name="jpegQuality">JPEG quality (60-100)</param>
-        public void CreatePdf(List<string> imagePaths, string outputPdfPath, double dpi = 0, ImageColorMode colorMode = ImageColorMode.FullColor, int jpegQuality = 80)
+        /// <param name="format">Image format (Jpeg or Png)</param>
+        public void CreatePdf(List<string> imagePaths, string outputPdfPath, double dpi = 0, ImageColorMode colorMode = ImageColorMode.FullColor, int jpegQuality = 80, PdfImageFormat format = PdfImageFormat.Jpeg)
         {
             try
             {
-                Logger.Info($"CreatePdf: Start. Files={imagePaths.Count}, Out={outputPdfPath}, Mode={colorMode}");
+                Logger.Info($"CreatePdf: Start. Files={imagePaths.Count}, Out={outputPdfPath}, Mode={colorMode}, Format={format}");
                 
                 using (PdfDocument document = new PdfDocument())
                 {
@@ -45,8 +45,8 @@ namespace KindleToPDF
 
                         try
                         {
-                            // Process image based on color mode
-                            processedImagePath = ProcessImage(imagePath, colorMode, jpegQuality);
+                            // Process image based on color mode and format
+                            processedImagePath = ProcessImage(imagePath, colorMode, jpegQuality, format);
                             if (processedImagePath != imagePath) isTempFile = true;
 
                             PdfPage page = document.AddPage();
@@ -104,10 +104,14 @@ namespace KindleToPDF
             }
         }
 
-        private string ProcessImage(string imagePath, ImageColorMode colorMode, int jpegQuality)
+        private string ProcessImage(string imagePath, ImageColorMode colorMode, int jpegQuality, PdfImageFormat format)
         {
-            // If full color, no processing needed
-            if (colorMode == ImageColorMode.FullColor)
+            // If full color and PNG format, no processing needed (assuming input is PNG or compatible)
+            // But we might want to ensure it is PNG if format is PNG.
+            // For simplicity, if FullColor and format matches input, return input.
+            // However, input is likely PNG. If format is Jpeg, we must convert.
+            
+            if (colorMode == ImageColorMode.FullColor && format == PdfImageFormat.Png)
                 return imagePath;
 
             using (Bitmap original = new Bitmap(imagePath))
@@ -130,15 +134,18 @@ namespace KindleToPDF
                         case ImageColorMode.HighColor:
                             processed = ConvertToHighColor(original);
                             break;
-                        default:
-                            return imagePath;
+                        default: // FullColor
+                             // If we are here, it means we need to convert to JPEG (FullColor + Jpeg)
+                             // We need a copy of original to save as JPEG
+                             processed = new Bitmap(original);
+                             break;
                     }
 
                     // Save processed image
                     string tempPath = Path.Combine(Path.GetTempPath(), $"processed_{Guid.NewGuid()}");
                     
-                    // Use JPEG for color/high color, PNG for indexed
-                    if (colorMode == ImageColorMode.HighColor || colorMode == ImageColorMode.FullColor)
+                    // Use JPEG for color/high color IF format is Jpeg
+                    if ((colorMode == ImageColorMode.HighColor || colorMode == ImageColorMode.FullColor) && format == PdfImageFormat.Jpeg)
                     {
                         tempPath += ".jpg";
                         if (processed != null)

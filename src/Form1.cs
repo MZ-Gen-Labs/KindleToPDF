@@ -68,6 +68,8 @@ namespace KindleToPDF
         private Label lblJpegQuality = null!;
         private TrackBar trkJpegQuality = null!;
         private Label lblJpegQualityValue = null!;
+        private Label lblImageFormat = null!;
+        private ComboBox cmbImageFormat = null!;
 
         // UI Enhancements
         private ToolTip toolTip = null!;
@@ -160,6 +162,11 @@ namespace KindleToPDF
                     };
                     cmbColorMode.SelectedIndex = colorModeIndex;
                 }
+
+                if (cmbImageFormat != null)
+                {
+                    cmbImageFormat.SelectedIndex = _settings.ImageFormat == PdfImageFormat.Jpeg ? 0 : 1;
+                }
                 
                 if (trkJpegQuality != null && lblJpegQualityValue != null)
                 {
@@ -235,6 +242,7 @@ namespace KindleToPDF
             _settings.AlwaysOnTop = chkAlwaysOnTop.Checked;
             _settings.DpiIndex = cmbDpi.SelectedIndex;
             _settings.PageDirection = cmbDirection.SelectedIndex;
+            _settings.ImageFormat = cmbImageFormat.SelectedIndex == 0 ? PdfImageFormat.Jpeg : PdfImageFormat.Png;
             _settings.CropRect = _cropRect;
             _settings.CaptureMode = rbModeManual.Checked ? CaptureMode.Manual : CaptureMode.Continuous;
 
@@ -389,6 +397,15 @@ namespace KindleToPDF
             cmbColorMode.SelectedIndexChanged += CmbColorMode_SelectedIndexChanged;
             tabSettings.Controls.Add(lblColorMode);
             tabSettings.Controls.Add(cmbColorMode);
+
+            settingsY += 30;
+            lblImageFormat = new Label { Text = "Image Format:", Location = new Point(20, settingsY), AutoSize = true };
+            cmbImageFormat = new ComboBox { Location = new Point(150, settingsY - 3), DropDownStyle = ComboBoxStyle.DropDownList, Width = 180 };
+            cmbImageFormat.Items.AddRange(new object[] { "JPEG", "PNG" });
+            cmbImageFormat.SelectedIndex = 0; // Default to JPEG
+            cmbImageFormat.SelectedIndexChanged += CmbImageFormat_SelectedIndexChanged;
+            tabSettings.Controls.Add(lblImageFormat);
+            tabSettings.Controls.Add(cmbImageFormat);
 
             settingsY += 30;
             lblJpegQuality = new Label { Text = "JPEG Quality:", Location = new Point(20, settingsY), AutoSize = true };
@@ -725,10 +742,18 @@ namespace KindleToPDF
             UpdateCompressionUI();
         }
 
+        private void CmbImageFormat_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            _settings.ImageFormat = cmbImageFormat.SelectedIndex == 0 ? PdfImageFormat.Jpeg : PdfImageFormat.Png;
+            UpdateCompressionUI();
+        }
+
         private void UpdateCompressionUI()
         {
-            // Show JPEG quality controls only for HighColor and FullColor modes
-            bool showJpegQuality = _settings.ColorMode == ImageColorMode.HighColor || _settings.ColorMode == ImageColorMode.FullColor;
+            // Show JPEG quality controls only for HighColor and FullColor modes AND when Format is JPEG
+            bool isJpeg = _settings.ImageFormat == PdfImageFormat.Jpeg;
+            bool isColor = _settings.ColorMode == ImageColorMode.HighColor || _settings.ColorMode == ImageColorMode.FullColor;
+            bool showJpegQuality = isJpeg && isColor;
             
             if (lblJpegQuality != null) lblJpegQuality.Visible = showJpegQuality;
             if (trkJpegQuality != null) trkJpegQuality.Visible = showJpegQuality;
@@ -1526,10 +1551,10 @@ namespace KindleToPDF
             string dpiStr = (string)(Invoke(new Func<string>(() => cmbDpi.SelectedItem?.ToString() ?? "Default")) ?? "Default");
             if (dpiStr != "Default" && double.TryParse(dpiStr, out double d)) dpi = d;
 
-            ImageColorMode colorMode = _settings.ColorMode;
-            int jpegQuality = _settings.JpegQuality;
-
-            await Task.Run(() => _pdfGenerator.CreatePdf(_capturedImages, finalOutputPath, dpi, colorMode, jpegQuality));
+            await Task.Run(() =>
+            {
+                _pdfGenerator.CreatePdf(_capturedImages, finalOutputPath, dpi, _settings.ColorMode, _settings.JpegQuality, _settings.ImageFormat);
+            });
             Log($"PDF saved to {finalOutputPath}");
             MessageBox.Show($"PDF creation complete!\nSaved to: {finalOutputPath}");
         }

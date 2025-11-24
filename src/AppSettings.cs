@@ -11,6 +11,7 @@ namespace KindleToPDF
     public enum SequentialType { Number, Alphabet, DateTime }
     public enum CaptureMode { Continuous, Manual }
     public enum ImageColorMode { Monochrome, Grayscale, Indexed256, HighColor, FullColor }
+    public enum PdfImageFormat { Jpeg, Png }
 
     public class AppSettings
     {
@@ -31,6 +32,7 @@ namespace KindleToPDF
         
         // Image Compression
         public ImageColorMode ColorMode { get; set; } = ImageColorMode.Grayscale;
+        public PdfImageFormat ImageFormat { get; set; } = PdfImageFormat.Jpeg;
         public int JpegQuality { get; set; } = 80; // 60-100
         
         // Naming Options
