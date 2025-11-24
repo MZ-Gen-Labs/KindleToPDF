@@ -31,6 +31,13 @@ namespace KindleToPDF
         [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
 
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool IsIconic(IntPtr hWnd);
+
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
@@ -47,6 +54,7 @@ namespace KindleToPDF
         private const int VK_HOME = 0x24;
         private const int VK_NEXT = 0x22; // PageDown
         private const int VK_F11 = 0x7A;
+        private const int SW_RESTORE = 9;
 
         public IntPtr GetKindleWindow()
         {
@@ -198,7 +206,11 @@ namespace KindleToPDF
             if (hWnd == IntPtr.Zero) return;
             
             // Restore if minimized
-            // ShowWindow(hWnd, SW_RESTORE); // Need PInvoke for ShowWindow if we want to handle minimized state properly
+            if (IsIconic(hWnd))
+            {
+                ShowWindow(hWnd, SW_RESTORE);
+                Thread.Sleep(200); // Wait for window to restore
+            }
             
             SetForegroundWindow(hWnd);
         }

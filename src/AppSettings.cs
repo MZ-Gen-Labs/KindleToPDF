@@ -7,6 +7,11 @@ using System.Text.Json.Serialization;
 
 namespace KindleToPDF
 {
+    public enum FileNameMode { Overwrite, Sequential }
+    public enum SequentialType { Number, Alphabet, DateTime }
+    public enum CaptureMode { Continuous, Manual }
+    public enum ImageColorMode { Monochrome, Grayscale, Indexed256, HighColor, FullColor }
+
     public class AppSettings
     {
         public AppSettings()
@@ -20,6 +25,21 @@ namespace KindleToPDF
         public bool AlwaysOnTop { get; set; } = true;
         public int DpiIndex { get; set; } = 0;
         public int PageDirection { get; set; } = 0; // 0: R2L (JP), 1: L2R (EN)
+        
+        // Capture Mode
+        public CaptureMode CaptureMode { get; set; } = CaptureMode.Continuous;
+        
+        // Image Compression
+        public ImageColorMode ColorMode { get; set; } = ImageColorMode.Grayscale;
+        public int JpegQuality { get; set; } = 80; // 60-100
+        
+        // Naming Options
+        public FileNameMode Mode { get; set; } = FileNameMode.Sequential;
+        public SequentialType SeqType { get; set; } = SequentialType.Number;
+        public int StartNumber { get; set; } = 1;
+        public int NumberDigits { get; set; } = 3;
+        public string StartChar { get; set; } = "a";
+        public string DateTimeFormat { get; set; } = "yyyyMMdd";
         
         public List<Rectangle> CropPatterns { get; set; } = new List<Rectangle>();
         public int SelectedPatternIndex { get; set; } = 0;
