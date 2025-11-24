@@ -293,89 +293,95 @@ namespace KindleToPDF
             tabHome.Controls.Add(lblSeparator1);
             y += 22;
 
-            // 1. Auto-detect Page Turn (Moved up)
-            chkAutoDetect = new CheckBox { Text = "Auto-detect Page Turn", Location = new Point(20, y), AutoSize = true, Checked = true };
+            // --- Settings Tab Controls ---
+            int settingsY = 15;
+
+            // 1. Auto-detect Page Turn
+            chkAutoDetect = new CheckBox { Text = "Auto-detect Page Turn", Location = new Point(20, settingsY), AutoSize = true, Checked = true };
             chkAutoDetect.CheckedChanged += (s, e) => 
             {
                 txtInterval.Enabled = !chkAutoDetect.Checked;
                 lblInterval.Enabled = !chkAutoDetect.Checked;
             };
-            tabHome.Controls.Add(chkAutoDetect);
+            tabSettings.Controls.Add(chkAutoDetect);
 
-            y += 25;
-            // 2. Interval (Moved down)
-            lblInterval = new Label { Text = "Interval (ms):", Location = new Point(20, y), AutoSize = true };
-            txtInterval = new TextBox { Text = "1000", Location = new Point(150, y - 3) };
+            settingsY += 25;
+            // 2. Interval
+            lblInterval = new Label { Text = "Interval (ms):", Location = new Point(20, settingsY), AutoSize = true };
+            txtInterval = new TextBox { Text = "1000", Location = new Point(150, settingsY - 3) };
             // Initialize enabled state
             txtInterval.Enabled = !chkAutoDetect.Checked;
             lblInterval.Enabled = !chkAutoDetect.Checked;
-            tabHome.Controls.Add(lblInterval);
-            tabHome.Controls.Add(txtInterval);
+            tabSettings.Controls.Add(lblInterval);
+            tabSettings.Controls.Add(txtInterval);
 
-            y += 30;
-            // 3. Stop at Last Page (Moved up)
-            chkStopAtLastPage = new CheckBox { Text = "Stop at Last Page", Location = new Point(20, y), AutoSize = true, Checked = true };
+            settingsY += 30;
+            // 3. Stop at Last Page
+            chkStopAtLastPage = new CheckBox { Text = "Stop at Last Page", Location = new Point(20, settingsY), AutoSize = true, Checked = true };
             chkStopAtLastPage.CheckedChanged += (s, e) =>
             {
                 txtPages.Enabled = !chkStopAtLastPage.Checked;
                 lblPages.Enabled = !chkStopAtLastPage.Checked;
             };
-            tabHome.Controls.Add(chkStopAtLastPage);
+            tabSettings.Controls.Add(chkStopAtLastPage);
 
-            y += 25;
-            // 4. Page Count (Moved down)
-            lblPages = new Label { Text = "Page Count:", Location = new Point(20, y), AutoSize = true };
-            txtPages = new TextBox { Text = "10", Location = new Point(150, y - 3) };
+            settingsY += 25;
+            // 4. Page Count
+            lblPages = new Label { Text = "Page Count:", Location = new Point(20, settingsY), AutoSize = true };
+            txtPages = new TextBox { Text = "10", Location = new Point(150, settingsY - 3) };
             // Initialize enabled state
             txtPages.Enabled = !chkStopAtLastPage.Checked;
             lblPages.Enabled = !chkStopAtLastPage.Checked;
-            tabHome.Controls.Add(lblPages);
-            tabHome.Controls.Add(txtPages);
+            tabSettings.Controls.Add(lblPages);
+            tabSettings.Controls.Add(txtPages);
 
-            y += 30;
-            chkAlwaysOnTop = new CheckBox { Text = "Always on Top", Location = new Point(20, y), AutoSize = true, Checked = true };
+            settingsY += 30;
+            chkAlwaysOnTop = new CheckBox { Text = "Always on Top", Location = new Point(20, settingsY), AutoSize = true, Checked = true };
             chkAlwaysOnTop.CheckedChanged += (s, e) => { this.TopMost = chkAlwaysOnTop.Checked; };
-            tabHome.Controls.Add(chkAlwaysOnTop);
+            tabSettings.Controls.Add(chkAlwaysOnTop);
 
-            y += 30;
-            lblDpi = new Label { Text = "PDF DPI:", Location = new Point(20, y), AutoSize = true };
-            cmbDpi = new ComboBox { Location = new Point(150, y - 3), DropDownStyle = ComboBoxStyle.DropDownList };
+            settingsY += 30;
+            lblDpi = new Label { Text = "PDF DPI:", Location = new Point(20, settingsY), AutoSize = true };
+            cmbDpi = new ComboBox { Location = new Point(150, settingsY - 3), DropDownStyle = ComboBoxStyle.DropDownList };
             cmbDpi.Items.AddRange(new object[] { "Default", "300", "450", "600" });
             cmbDpi.SelectedIndex = 0;
-            tabHome.Controls.Add(lblDpi);
-            tabHome.Controls.Add(cmbDpi);
+            tabSettings.Controls.Add(lblDpi);
+            tabSettings.Controls.Add(cmbDpi);
 
-            y += 30;
-            lblDirection = new Label { Text = "Page Direction:", Location = new Point(20, y), AutoSize = true };
-            cmbDirection = new ComboBox { Location = new Point(150, y - 3), DropDownStyle = ComboBoxStyle.DropDownList, Width = 180 };
+            settingsY += 30;
+            lblDirection = new Label { Text = "Page Direction:", Location = new Point(20, settingsY), AutoSize = true };
+            cmbDirection = new ComboBox { Location = new Point(150, settingsY - 3), DropDownStyle = ComboBoxStyle.DropDownList, Width = 180 };
             cmbDirection.Items.AddRange(new object[] { "Right to Left (JP)", "Left to Right (EN)" });
             cmbDirection.SelectedIndex = 0;
-            tabHome.Controls.Add(lblDirection);
-            tabHome.Controls.Add(cmbDirection);
+            tabSettings.Controls.Add(lblDirection);
+            tabSettings.Controls.Add(cmbDirection);
 
-            y += 30;
-            lblColorMode = new Label { Text = "Image Quality:", Location = new Point(20, y), AutoSize = true };
-            cmbColorMode = new ComboBox { Location = new Point(150, y - 3), DropDownStyle = ComboBoxStyle.DropDownList, Width = 180 };
+            settingsY += 30;
+            lblColorMode = new Label { Text = "Image Quality:", Location = new Point(20, settingsY), AutoSize = true };
+            cmbColorMode = new ComboBox { Location = new Point(150, settingsY - 3), DropDownStyle = ComboBoxStyle.DropDownList, Width = 180 };
             cmbColorMode.Items.AddRange(new object[] { "Monochrome (1-bit)", "Grayscale (8-bit)", "256 Colors", "High Color (16-bit)", "Full Color (24-bit)" });
             cmbColorMode.SelectedIndex = 1; // Default to Grayscale
             cmbColorMode.SelectedIndexChanged += CmbColorMode_SelectedIndexChanged;
-            tabHome.Controls.Add(lblColorMode);
-            tabHome.Controls.Add(cmbColorMode);
+            tabSettings.Controls.Add(lblColorMode);
+            tabSettings.Controls.Add(cmbColorMode);
 
-            y += 30;
-            lblJpegQuality = new Label { Text = "JPEG Quality:", Location = new Point(20, y), AutoSize = true };
-            lblJpegQualityValue = new Label { Text = "80", Location = new Point(340, y), AutoSize = true };
-            tabHome.Controls.Add(lblJpegQuality);
-            tabHome.Controls.Add(lblJpegQualityValue);
+            settingsY += 30;
+            lblJpegQuality = new Label { Text = "JPEG Quality:", Location = new Point(20, settingsY), AutoSize = true };
+            lblJpegQualityValue = new Label { Text = "80", Location = new Point(340, settingsY), AutoSize = true };
+            tabSettings.Controls.Add(lblJpegQuality);
+            tabSettings.Controls.Add(lblJpegQualityValue);
 
-            y += 22;
-            trkJpegQuality = new TrackBar { Location = new Point(20, y), Width = 300, Minimum = 60, Maximum = 100, Value = 80, TickFrequency = 10 };
+            settingsY += 22;
+            trkJpegQuality = new TrackBar { Location = new Point(20, settingsY), Width = 300, Minimum = 60, Maximum = 100, Value = 80, TickFrequency = 10 };
             trkJpegQuality.ValueChanged += (s, e) => 
             {
                 lblJpegQualityValue.Text = trkJpegQuality.Value.ToString();
                 _settings.JpegQuality = trkJpegQuality.Value;
             };
-            tabHome.Controls.Add(trkJpegQuality);
+            tabSettings.Controls.Add(trkJpegQuality);
+
+            // Adjust y for Home tab controls
+            y += 10;
 
             // JPEG quality controls visibility will be set in ApplySettingsToUI
 
@@ -459,19 +465,22 @@ namespace KindleToPDF
             tabCrop.Controls.Add(txtCropBottom);
             tabCrop.Controls.Add(lblCropBottomMax);
 
-            y += 75;
-            lblOutput = new Label { Text = "Output PDF:", Location = new Point(20, y), AutoSize = true };
-            txtOutput = new TextBox { Text = "output.pdf", Location = new Point(100, y - 3), Width = 150 };
-            tabHome.Controls.Add(lblOutput);
-            tabHome.Controls.Add(txtOutput);
+            settingsY += 35;
+            lblOutput = new Label { Text = "Output PDF:", Location = new Point(20, settingsY), AutoSize = true };
+            txtOutput = new TextBox { Text = "output.pdf", Location = new Point(100, settingsY - 3), Width = 150 };
+            tabSettings.Controls.Add(lblOutput);
+            tabSettings.Controls.Add(txtOutput);
 
-            btnRefreshTitle = new Button { Text = "Refresh", Location = new Point(260, y - 5), Size = new Size(60, 25) };
+            btnRefreshTitle = new Button { Text = "Refresh", Location = new Point(260, settingsY - 5), Size = new Size(60, 25) };
             btnRefreshTitle.Click += BtnRefreshTitle_Click;
-            tabHome.Controls.Add(btnRefreshTitle);
+            tabSettings.Controls.Add(btnRefreshTitle);
 
-            btnNamingOptions = new Button { Text = "Options", Location = new Point(330, y - 5), Size = new Size(60, 25) };
+            btnNamingOptions = new Button { Text = "Options", Location = new Point(330, settingsY - 5), Size = new Size(60, 25) };
             btnNamingOptions.Click += BtnNamingOptions_Click;
-            tabHome.Controls.Add(btnNamingOptions);
+            tabSettings.Controls.Add(btnNamingOptions);
+
+            // Adjust y for Home tab controls (Start/Stop buttons)
+            y += 45;
 
             y += 35;
             btnStart = new Button { Text = "Start", Location = new Point(50, y), Size = new Size(100, 40) };
