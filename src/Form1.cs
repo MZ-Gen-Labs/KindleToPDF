@@ -530,7 +530,7 @@ namespace KindleToPDF
             tabCrop.Controls.Add(txtCropBottom);
             tabCrop.Controls.Add(lblCropBottomMax);
 
-            settingsY += 35;
+            settingsY += 60; // Increased spacing to avoid overlap with TrackBar
             lblOutput = new Label { Text = "Output PDF:", Location = new Point(20, settingsY), AutoSize = true };
             txtOutput = new TextBox { Text = "output.pdf", Location = new Point(100, settingsY - 3), Width = 150 };
             tabSettings.Controls.Add(lblOutput);
