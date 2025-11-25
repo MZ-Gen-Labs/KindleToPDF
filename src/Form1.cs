@@ -95,10 +95,38 @@ namespace KindleToPDF
                 File.AppendAllText("debug_log.txt", "Form1 Ctor: Start\n");
                 _settings = AppSettings.Load();
                 File.AppendAllText("debug_log.txt", "Form1 Ctor: Settings Loaded\n");
+                
                 InitializeComponent();
-                File.AppendAllText("debug_log.txt", "Form1 Ctor: InitializeComponent Done\n");
                 InitializeCustomControls();
-                File.AppendAllText("debug_log.txt", "Form1 Ctor: InitializeCustomControls Done\n");
+
+                // Set App Icon from embedded resource
+                try
+                {
+                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    string resourceName = "KindleToPDF.Resources.AppIcon.png";
+                    
+                    using (var stream = assembly.GetManifestResourceStream(resourceName))
+                    {
+                        if (stream != null)
+                        {
+                            using (var bitmap = new Bitmap(stream))
+                            {
+                                IntPtr hIcon = bitmap.GetHicon();
+                                this.Icon = Icon.FromHandle(hIcon);
+                                Logger.Info("App icon loaded successfully from embedded resource");
+                            }
+                        }
+                        else
+                        {
+                            Logger.Warning($"Embedded resource not found: {resourceName}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning($"Failed to load app icon: {ex.Message}");
+                }
+
                 _automation = new AutomationLogic();
                 _pdfGenerator = new PdfGenerator();
                 _capturedImages = new List<string>();
