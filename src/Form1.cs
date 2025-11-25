@@ -343,6 +343,230 @@ namespace KindleToPDF
             TabPage tabLog = new TabPage("Log");
             tabControl.TabPages.Add(tabLog);
 
+            /* --- Test Tabs (Commented out - used for debugging window handle issue) ---
+            // --- Test Tab ---
+            TabPage tabTest = new TabPage("Test");
+            tabTest.AutoScroll = true;
+            tabControl.TabPages.Add(tabTest);
+
+            int testY = 20;
+            Label lblTestInfo = new Label { Text = "Maximize Strategies Test", Location = new Point(20, testY), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
+            tabTest.Controls.Add(lblTestInfo);
+            testY += 30;
+
+            Button btnStrat1 = new Button { Text = "1. Async Restore -> Wait -> Maximize", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat1.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_AsyncRestoreWait(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat1);
+            testY += 40;
+
+            Button btnStrat2 = new Button { Text = "2. Sync Restore -> Wait -> Maximize", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat2.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_SyncRestoreWait(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat2);
+            testY += 40;
+
+            Button btnStrat3 = new Button { Text = "3. Direct Maximize (Async)", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat3.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_DirectAsync(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat3);
+            testY += 40;
+
+            Button btnStrat4 = new Button { Text = "4. SetWindowPlacement", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat4.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_SetWindowPlacement(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat4);
+            testY += 40;
+
+            Button btnStrat5 = new Button { Text = "5. SendMessage (SC_MAXIMIZE)", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat5.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_SendMessage(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat5);
+            testY += 40;
+
+            Button btnStrat6 = new Button { Text = "6. SwitchToThisWindow", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat6.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_SwitchToThisWindow(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat6);
+            testY += 40;
+
+            Button btnStrat7 = new Button { Text = "7. SendKeys (Alt+Space -> x)", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat7.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_SendKeys_AltSpaceX(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat7);
+            testY += 40;
+
+            Button btnStrat8 = new Button { Text = "8. Restore Only (No Maximize)", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat8.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_RestoreOnly(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat8);
+            testY += 40;
+
+            Button btnStrat9 = new Button { Text = "9. Direct SW_MAXIMIZE (TaskMgr)", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat9.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_DirectMaximizeFromMinimized(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat9);
+            testY += 40;
+
+            Button btnStrat10 = new Button { Text = "10. Diagnostic (Check State)", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat10.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_Diagnostic(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat10);
+            testY += 40;
+
+            Button btnStrat11 = new Button { Text = "11. GetWindowPlacement", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat11.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_UseWindowPlacement(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat11);
+            testY += 40;
+
+            Button btnStrat12 = new Button { Text = "12. SW_SHOWNA -> Maximize", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat12.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_ShowThenMaximize(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat12);
+            testY += 40;
+
+            Button btnStrat13 = new Button { Text = "13. SW_SHOW -> Maximize", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat13.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_ShowActiveThenMaximize(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat13);
+            testY += 40;
+
+            Button btnStrat14 = new Button { Text = "14. Manual Resize (MoveWindow)", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat14.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_ManualResize(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat14);
+            testY += 40;
+
+            Button btnStrat15 = new Button { Text = "15. Manual Resize (SetWindowPos)", Location = new Point(20, testY), Size = new Size(300, 30) };
+            btnStrat15.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.MaximizeStrategy_SetWindowPosResize(hWnd);
+            };
+            tabTest.Controls.Add(btnStrat15);
+
+
+            // --- Test2 Tab (Restore-Only Strategies) ---
+            TabPage tabTest2 = new TabPage("Test2");
+            tabTest2.AutoScroll = true;
+            tabControl.TabPages.Add(tabTest2);
+
+            int test2Y = 20;
+            Label lblTest2Info = new Label { Text = "Restore-Only Strategies (最小化解除のみ)", Location = new Point(20, test2Y), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
+            tabTest2.Controls.Add(lblTest2Info);
+            test2Y += 30;
+
+            Button btnRestore16 = new Button { Text = "16. IsWindowVisible + SW_SHOW", Location = new Point(20, test2Y), Size = new Size(300, 30) };
+            btnRestore16.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.RestoreStrategy_IsWindowVisible(hWnd);
+            };
+            tabTest2.Controls.Add(btnRestore16);
+            test2Y += 40;
+
+            Button btnRestore17 = new Button { Text = "17. OpenIcon (専用API)", Location = new Point(20, test2Y), Size = new Size(300, 30) };
+            btnRestore17.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.RestoreStrategy_OpenIcon(hWnd);
+            };
+            tabTest2.Controls.Add(btnRestore17);
+            test2Y += 40;
+
+            Button btnRestore18 = new Button { Text = "18. SendMessage SC_RESTORE", Location = new Point(20, test2Y), Size = new Size(300, 30) };
+            btnRestore18.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.RestoreStrategy_SendMessageRestore(hWnd);
+            };
+            tabTest2.Controls.Add(btnRestore18);
+            test2Y += 40;
+
+            Button btnRestore19 = new Button { Text = "19. SW_SHOWNORMAL", Location = new Point(20, test2Y), Size = new Size(300, 30) };
+            btnRestore19.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.RestoreStrategy_ShowNormal(hWnd);
+            };
+            tabTest2.Controls.Add(btnRestore19);
+            test2Y += 40;
+
+            Button btnRestore20 = new Button { Text = "20. IsWindowVisible + OpenIcon", Location = new Point(20, test2Y), Size = new Size(300, 30) };
+            btnRestore20.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.RestoreStrategy_VisibleCheckThenOpenIcon(hWnd);
+            };
+            tabTest2.Controls.Add(btnRestore20);
+            test2Y += 40;
+
+            Button btnRestore21 = new Button { Text = "21. MoveWindow to Screen", Location = new Point(20, test2Y), Size = new Size(300, 30) };
+            btnRestore21.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.RestoreStrategy_MoveToScreen(hWnd);
+            };
+            tabTest2.Controls.Add(btnRestore21);
+            test2Y += 40;
+
+            Button btnRestore22 = new Button { Text = "22. SetWindowPos to Screen", Location = new Point(20, test2Y), Size = new Size(300, 30) };
+            btnRestore22.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.RestoreStrategy_SetWindowPosToScreen(hWnd);
+            };
+            tabTest2.Controls.Add(btnRestore22);
+            test2Y += 40;
+
+            Button btnRestore23 = new Button { Text = "23. Modify WindowPlacement", Location = new Point(20, test2Y), Size = new Size(300, 30) };
+            btnRestore23.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                if (hWnd != IntPtr.Zero) _automation.RestoreStrategy_ModifyPlacement(hWnd);
+            };
+            tabTest2.Controls.Add(btnRestore23);
+            test2Y += 40;
+
+            Label lblDiagnostic = new Label { Text = "--- Diagnostics ---", Location = new Point(20, test2Y), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
+            tabTest2.Controls.Add(lblDiagnostic);
+            test2Y += 30;
+
+            Button btnDiag24 = new Button { Text = "24. Enumerate ALL Kindle Windows", Location = new Point(20, test2Y), Size = new Size(300, 30) };
+            btnDiag24.Click += (s, e) => {
+                IntPtr hWnd = _automation.GetKindleWindow();
+                _automation.DiagnosticStrategy_EnumerateKindleWindows(hWnd);
+            };
+            tabTest2.Controls.Add(btnDiag24);
+            */ // End of Test Tabs
+
+
+
+
+
+
+
+
             // Move all existing controls to tabHome
             int y = 15;
 

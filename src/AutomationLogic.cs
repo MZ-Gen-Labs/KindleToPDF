@@ -41,6 +41,71 @@ namespace KindleToPDF
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool IsIconic(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetWindowPlacement(IntPtr hWnd, [In] ref WINDOWPLACEMENT lpwndpl);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetWindowPlacement(IntPtr hWnd, out WINDOWPLACEMENT lpwndpl);
+
+        [DllImport("user32.dll")]
+        static extern void SwitchToThisWindow(IntPtr hWnd, bool fAltTab);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll")]
+        static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetDesktopWindow();
+
+        [DllImport("user32.dll")]
+        static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool OpenIcon(IntPtr hWnd);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
+
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        [Serializable]
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct WINDOWPLACEMENT
+        {
+            public int length;
+            public int flags;
+            public int showCmd;
+            public Point ptMinPosition;
+            public Point ptMaxPosition;
+            public Rectangle rcNormalPosition;
+        }
+
+        private const int SC_MAXIMIZE = 0xF030;
+        private const int SC_RESTORE = 0xF120;
+        private const uint WM_SYSCOMMAND = 0x0112;
+
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
@@ -61,7 +126,43 @@ namespace KindleToPDF
                 Process[] processes = Process.GetProcessesByName(Constants.KINDLE_PROCESS_NAME);
                 if (processes.Length > 0)
                 {
-                    return processes[0].MainWindowHandle;
+                    Process kindleProcess = processes[0];
+                    uint kindleProcessId = (uint)kindleProcess.Id;
+                    
+                    List<IntPtr> kindleWindows = new List<IntPtr>();
+
+                    // Enumerate all windows belonging to Kindle process
+                    EnumWindows((hWnd, lParam) =>
+                    {
+                        GetWindowThreadProcessId(hWnd, out uint processId);
+                        if (processId == kindleProcessId)
+                        {
+                            kindleWindows.Add(hWnd);
+                        }
+                        return true;
+                    }, IntPtr.Zero);
+
+                    // Find the main Kindle window (Qt5QWindowIcon with title containing "Kindle")
+                    foreach (IntPtr hWnd in kindleWindows)
+                    {
+                        System.Text.StringBuilder className = new System.Text.StringBuilder(256);
+                        GetClassName(hWnd, className, className.Capacity);
+                        
+                        System.Text.StringBuilder title = new System.Text.StringBuilder(256);
+                        GetWindowText(hWnd, title, title.Capacity);
+
+                        // Look for Qt5QWindowIcon window with "for PC" in title (the main window)
+                        if (className.ToString() == "Qt5QWindowIcon" && 
+                            title.ToString().Contains("for PC"))
+                        {
+                            Logger.Info($"Found Kindle main window: {hWnd}, Title: {title}");
+                            return hWnd;
+                        }
+                    }
+
+                    // Fallback to MainWindowHandle if not found
+                    Logger.Warning("Could not find Qt5QWindowIcon Kindle window, using MainWindowHandle");
+                    return kindleProcess.MainWindowHandle;
                 }
             }
             catch (Exception ex)
@@ -276,33 +377,539 @@ namespace KindleToPDF
         /// <param name="hWnd">Window handle</param>
         public void MaximizeKindleWindow(IntPtr hWnd)
         {
-            if (hWnd == IntPtr.Zero)
-            {
-                Logger.Warning("Cannot maximize window: invalid handle");
-                return;
-            }
+            // Default to Strategy 1 (Async Restore -> Wait -> Maximize) as it's the most robust theoretical fix
+            MaximizeStrategy_AsyncRestoreWait(hWnd);
+        }
 
-            // First restore if minimized
+        // Strategy 1: Async Restore -> Wait -> Maximize
+        public void MaximizeStrategy_AsyncRestoreWait(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+
             if (IsIconic(hWnd))
             {
-                Logger.Info("Window is minimized, restoring first...");
-                ShowWindow(hWnd, Constants.SW_RESTORE);
-                Thread.Sleep(500); // Longer delay for restore
+                Logger.Info("Strategy 1: Window is minimized, restoring async...");
+                ShowWindowAsync(hWnd, Constants.SW_RESTORE);
                 
-                // Bring to foreground after restore
-                SetForegroundWindow(hWnd);
-                Thread.Sleep(300); // Additional delay to ensure window is active
+                // Wait for restore
+                int retries = 0;
+                while (IsIconic(hWnd) && retries < 10)
+                {
+                    Thread.Sleep(200);
+                    retries++;
+                }
             }
 
-            // Maximize the window
+            Logger.Info("Strategy 1: Maximizing async...");
+            ShowWindowAsync(hWnd, Constants.SW_MAXIMIZE);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 2: Sync Restore -> Wait -> Maximize (Original approach)
+        public void MaximizeStrategy_SyncRestoreWait(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+
+            if (IsIconic(hWnd))
+            {
+                Logger.Info("Strategy 2: Window is minimized, restoring sync...");
+                ShowWindow(hWnd, Constants.SW_RESTORE);
+                Thread.Sleep(500);
+                SetForegroundWindow(hWnd);
+                Thread.Sleep(300);
+            }
+
+            Logger.Info("Strategy 2: Maximizing sync...");
             ShowWindow(hWnd, Constants.SW_MAXIMIZE);
             Thread.Sleep(Constants.WINDOW_RESTORE_DELAY_MS);
-            
-            // Bring to foreground to ensure it's active
             SetForegroundWindow(hWnd);
-            Thread.Sleep(100); // Final delay to ensure focus
+        }
+
+        // Strategy 3: Direct Maximize (Async) - The one that failed previously
+        public void MaximizeStrategy_DirectAsync(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 3: Direct Maximize Async...");
+            ShowWindowAsync(hWnd, Constants.SW_MAXIMIZE);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 4: SetWindowPlacement
+        public void MaximizeStrategy_SetWindowPlacement(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 4: SetWindowPlacement...");
+
+            GetWindowPlacement(hWnd, out WINDOWPLACEMENT placement);
+            placement.showCmd = Constants.SW_MAXIMIZE;
+            placement.length = Marshal.SizeOf(placement);
             
-            Logger.Info("Kindle window maximized");
+            SetWindowPlacement(hWnd, ref placement);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 5: SendMessage (SC_MAXIMIZE)
+        public void MaximizeStrategy_SendMessage(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 5: SendMessage SC_MAXIMIZE...");
+
+            if (IsIconic(hWnd))
+            {
+                ShowWindowAsync(hWnd, Constants.SW_RESTORE);
+                Thread.Sleep(500);
+            }
+
+            PostMessage(hWnd, WM_SYSCOMMAND, (IntPtr)SC_MAXIMIZE, IntPtr.Zero);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 6: SwitchToThisWindow
+        public void MaximizeStrategy_SwitchToThisWindow(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 6: SwitchToThisWindow...");
+
+            SwitchToThisWindow(hWnd, true);
+            Thread.Sleep(200);
+            ShowWindowAsync(hWnd, Constants.SW_MAXIMIZE);
+        }
+
+        // Strategy 7: SendKeys (Alt+Space -> x) - Keyboard simulation
+        public void MaximizeStrategy_SendKeys_AltSpaceX(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 7: SendKeys Alt+Space -> x...");
+
+            // Bring window to front first
+            SetForegroundWindow(hWnd);
+            Thread.Sleep(300);
+
+            try
+            {
+                // Send Alt+Space to open window menu, then 'x' for maximize
+                SendKeys.SendWait("% ");  // Alt+Space
+                Thread.Sleep(200);
+                SendKeys.SendWait("x");   // Maximize (Japanese: 最大化)
+                Logger.Info("Strategy 7: Sent Alt+Space -> x");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Strategy 7 failed: {ex.Message}", ex);
+            }
+        }
+
+        // Strategy 8: Restore Only (No Maximize) - Diagnostic test
+        public void MaximizeStrategy_RestoreOnly(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 8: Restore Only (diagnostic)...");
+
+            if (IsIconic(hWnd))
+            {
+                ShowWindow(hWnd, Constants.SW_RESTORE);
+                Logger.Info("Strategy 8: Window restored (no maximize)");
+            }
+            else
+            {
+                Logger.Info("Strategy 8: Window was not minimized");
+            }
+        }
+
+        // Strategy 9: Direct SW_MAXIMIZE from minimized (Task Manager style)
+        public void MaximizeStrategy_DirectMaximizeFromMinimized(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 9: Direct SW_MAXIMIZE (TaskManager style)...");
+
+            // Direct maximize without any restore or SetForegroundWindow
+            ShowWindow(hWnd, Constants.SW_MAXIMIZE);
+            Logger.Info("Strategy 9: Called ShowWindow(SW_MAXIMIZE) directly");
+        }
+
+        // Strategy 10: Diagnostic - Check Window State
+        public void MaximizeStrategy_Diagnostic(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 10: Diagnostic Window State Check...");
+
+            bool isIconic = IsIconic(hWnd);
+            Logger.Info($"IsIconic: {isIconic}");
+
+            GetWindowPlacement(hWnd, out WINDOWPLACEMENT placement);
+            Logger.Info($"showCmd: {placement.showCmd}");
+            Logger.Info($"SW_HIDE=0, SW_SHOWNORMAL=1, SW_SHOWMINIMIZED=2, SW_SHOWMAXIMIZED=3, SW_SHOWNOACTIVATE=4, SW_SHOW=5, SW_MINIMIZE=6, SW_SHOWMINNOACTIVE=7, SW_SHOWNA=8, SW_RESTORE=9");
+            
+            Rectangle bounds = GetWindowBounds(hWnd);
+            Logger.Info($"Window bounds: {bounds}");
+        }
+
+        // Strategy 11: Using GetWindowPlacement to restore
+        public void MaximizeStrategy_UseWindowPlacement(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 11: Using GetWindowPlacement...");
+
+            GetWindowPlacement(hWnd, out WINDOWPLACEMENT placement);
+            Logger.Info($"Current showCmd: {placement.showCmd}");
+
+            // If minimized (showCmd == 2 or 6), restore first
+            if (placement.showCmd == 2 || placement.showCmd == 6)
+            {
+                Logger.Info("Window is minimized, restoring via SetWindowPlacement...");
+                placement.showCmd = Constants.SW_RESTORE;
+                placement.length = Marshal.SizeOf(placement);
+                SetWindowPlacement(hWnd, ref placement);
+                Thread.Sleep(500);
+            }
+
+            // Now maximize
+            Logger.Info("Maximizing via SetWindowPlacement...");
+            GetWindowPlacement(hWnd, out placement);
+            placement.showCmd = Constants.SW_MAXIMIZE;
+            placement.length = Marshal.SizeOf(placement);
+            SetWindowPlacement(hWnd, ref placement);
+        }
+
+        // Strategy 12: Handle Hidden Window (bounds = 0,0,0,0)
+        public void MaximizeStrategy_ShowThenMaximize(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 12: Show then Maximize (for hidden windows)...");
+
+            Rectangle bounds = GetWindowBounds(hWnd);
+            Logger.Info($"Current bounds: {bounds}");
+
+            // If window is hidden (bounds = 0,0,0,0), show it first
+            if (bounds.Width == 0 || bounds.Height == 0)
+            {
+                Logger.Info("Window appears hidden, showing with SW_SHOWNA...");
+                ShowWindow(hWnd, Constants.SW_SHOWNA); // SW_SHOWNA = 8 (show without activating)
+                Thread.Sleep(300);
+                
+                bounds = GetWindowBounds(hWnd);
+                Logger.Info($"Bounds after SW_SHOWNA: {bounds}");
+            }
+
+            // Now try to maximize using ShowWindowAsync
+            Logger.Info("Attempting maximize with ShowWindowAsync...");
+            ShowWindowAsync(hWnd, Constants.SW_MAXIMIZE);
+            Thread.Sleep(300);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 13: Show with SW_SHOW then maximize
+        public void MaximizeStrategy_ShowActiveThenMaximize(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 13: SW_SHOW then Maximize...");
+
+            Rectangle bounds = GetWindowBounds(hWnd);
+            Logger.Info($"Current bounds: {bounds}");
+
+            if (bounds.Width == 0 || bounds.Height == 0)
+            {
+                Logger.Info("Window appears hidden, showing with SW_SHOW...");
+                ShowWindow(hWnd, Constants.SW_SHOW); // SW_SHOW = 5
+                Thread.Sleep(500);
+                
+                bounds = GetWindowBounds(hWnd);
+                Logger.Info($"Bounds after SW_SHOW: {bounds}");
+            }
+
+            Logger.Info("Attempting maximize with ShowWindowAsync...");
+            ShowWindowAsync(hWnd, Constants.SW_MAXIMIZE);
+            Thread.Sleep(300);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 14: Show window and resize to screen size (avoid SW_MAXIMIZE)
+        public void MaximizeStrategy_ManualResize(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 14: Manual Resize to Screen Size...");
+
+            Rectangle bounds = GetWindowBounds(hWnd);
+            Logger.Info($"Current bounds: {bounds}");
+
+            // Show window first if hidden
+            if (bounds.Width == 0 || bounds.Height == 0)
+            {
+                Logger.Info("Window appears hidden, showing with SW_SHOW...");
+                ShowWindow(hWnd, Constants.SW_SHOW);
+                Thread.Sleep(500);
+            }
+
+            // Get screen size
+            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            Logger.Info($"Screen bounds: {screenBounds}");
+
+            // Resize window to screen size using MoveWindow
+            Logger.Info("Resizing window to screen size with MoveWindow...");
+            bool result = MoveWindow(hWnd, 0, 0, screenBounds.Width, screenBounds.Height, true);
+            Logger.Info($"MoveWindow result: {result}");
+            
+            Thread.Sleep(300);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 15: Show window and resize using SetWindowPos
+        public void MaximizeStrategy_SetWindowPosResize(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Strategy 15: SetWindowPos Resize...");
+
+            Rectangle bounds = GetWindowBounds(hWnd);
+            Logger.Info($"Current bounds: {bounds}");
+
+            // Show window first if hidden
+            if (bounds.Width == 0 || bounds.Height == 0)
+            {
+                Logger.Info("Window appears hidden, showing with SW_SHOW...");
+                ShowWindow(hWnd, Constants.SW_SHOW);
+                Thread.Sleep(500);
+            }
+
+            // Get screen size
+            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            Logger.Info($"Screen bounds: {screenBounds}");
+
+            // SetWindowPos flags
+            const uint SWP_NOZORDER = 0x0004;
+            const uint SWP_SHOWWINDOW = 0x0040;
+
+            // Resize window using SetWindowPos
+            Logger.Info("Resizing window with SetWindowPos...");
+            bool result = SetWindowPos(hWnd, IntPtr.Zero, 0, 0, screenBounds.Width, screenBounds.Height, SWP_NOZORDER | SWP_SHOWWINDOW);
+            Logger.Info($"SetWindowPos result: {result}");
+            
+            Thread.Sleep(300);
+            SetForegroundWindow(hWnd);
+        }
+
+        // ===== RESTORE-ONLY STRATEGIES (No Maximize) =====
+        
+        // Strategy 16: Check IsWindowVisible + SW_SHOW
+        public void RestoreStrategy_IsWindowVisible(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Restore 16: IsWindowVisible check...");
+
+            bool isVisible = IsWindowVisible(hWnd);
+            Logger.Info($"IsWindowVisible: {isVisible}");
+
+            if (!isVisible)
+            {
+                Logger.Info("Window is not visible, showing with SW_SHOW...");
+                ShowWindow(hWnd, Constants.SW_SHOW);
+                Thread.Sleep(500);
+            }
+
+            SetForegroundWindow(hWnd);
+            Logger.Info("Restore 16: Complete");
+        }
+
+        // Strategy 17: OpenIcon (専用の復元関数)
+        public void RestoreStrategy_OpenIcon(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Restore 17: OpenIcon...");
+
+            bool result = OpenIcon(hWnd);
+            Logger.Info($"OpenIcon result: {result}");
+            
+            Thread.Sleep(300);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 18: SendMessage WM_SYSCOMMAND SC_RESTORE (タスクバークリック相当)
+        public void RestoreStrategy_SendMessageRestore(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Restore 18: SendMessage WM_SYSCOMMAND SC_RESTORE...");
+
+            SendMessage(hWnd, WM_SYSCOMMAND, (IntPtr)SC_RESTORE, IntPtr.Zero);
+            Logger.Info("Sent SC_RESTORE message");
+            
+            Thread.Sleep(300);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 19: SW_SHOWNORMAL (Web検索推奨)
+        public void RestoreStrategy_ShowNormal(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Restore 19: SW_SHOWNORMAL...");
+
+            ShowWindow(hWnd, 1); // SW_SHOWNORMAL = 1
+            Logger.Info("Called ShowWindow(SW_SHOWNORMAL)");
+            
+            Thread.Sleep(300);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 20: Combination - IsWindowVisible + OpenIcon
+        public void RestoreStrategy_VisibleCheckThenOpenIcon(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Restore 20: IsWindowVisible + OpenIcon...");
+
+            bool isVisible = IsWindowVisible(hWnd);
+            Logger.Info($"IsWindowVisible: {isVisible}");
+
+            if (!isVisible)
+            {
+                Logger.Info("Window not visible, calling OpenIcon...");
+                bool result = OpenIcon(hWnd);
+                Logger.Info($"OpenIcon result: {result}");
+                Thread.Sleep(500);
+            }
+
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 21: Move window to screen coordinates first
+        public void RestoreStrategy_MoveToScreen(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Restore 21: Move to screen coordinates...");
+
+            Rectangle bounds = GetWindowBounds(hWnd);
+            Logger.Info($"Current bounds: {bounds}");
+
+            // Get screen size
+            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            Logger.Info($"Screen bounds: {screenBounds}");
+
+            // Move window to visible coordinates (100, 100) with reasonable size
+            int width = screenBounds.Width - 200;
+            int height = screenBounds.Height - 200;
+            
+            Logger.Info($"Moving window to (100, 100, {width}, {height})...");
+            bool result = MoveWindow(hWnd, 100, 100, width, height, true);
+            Logger.Info($"MoveWindow result: {result}");
+            
+            Thread.Sleep(500);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 22: SetWindowPos to move to screen
+        public void RestoreStrategy_SetWindowPosToScreen(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Restore 22: SetWindowPos to screen...");
+
+            Rectangle bounds = GetWindowBounds(hWnd);
+            Logger.Info($"Current bounds: {bounds}");
+
+            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            int width = screenBounds.Width - 200;
+            int height = screenBounds.Height - 200;
+
+            const uint SWP_NOZORDER = 0x0004;
+            const uint SWP_SHOWWINDOW = 0x0040;
+
+            Logger.Info($"SetWindowPos to (100, 100, {width}, {height})...");
+            bool result = SetWindowPos(hWnd, IntPtr.Zero, 100, 100, width, height, SWP_NOZORDER | SWP_SHOWWINDOW);
+            Logger.Info($"SetWindowPos result: {result}");
+            
+            Thread.Sleep(500);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 23: GetWindowPlacement + modify position
+        public void RestoreStrategy_ModifyPlacement(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero) return;
+            Logger.Info("Restore 23: Modify WindowPlacement...");
+
+            GetWindowPlacement(hWnd, out WINDOWPLACEMENT placement);
+            Logger.Info($"Current showCmd: {placement.showCmd}");
+            Logger.Info($"Current rcNormalPosition: {placement.rcNormalPosition}");
+
+            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            
+            // Set normal position to visible coordinates
+            placement.rcNormalPosition = new Rectangle(100, 100, screenBounds.Width - 200, screenBounds.Height - 200);
+            placement.showCmd = 1; // SW_SHOWNORMAL
+            placement.length = Marshal.SizeOf(placement);
+
+            Logger.Info($"Setting rcNormalPosition to: {placement.rcNormalPosition}");
+            bool result = SetWindowPlacement(hWnd, ref placement);
+            Logger.Info($"SetWindowPlacement result: {result}");
+            
+            Thread.Sleep(500);
+            SetForegroundWindow(hWnd);
+        }
+
+        // Strategy 24: Enumerate ALL Kindle windows
+        public void DiagnosticStrategy_EnumerateKindleWindows(IntPtr hWnd)
+        {
+            Logger.Info("Diagnostic 24: Enumerating ALL Kindle windows...");
+
+            try
+            {
+                Process[] processes = Process.GetProcessesByName(Constants.KINDLE_PROCESS_NAME);
+                if (processes.Length == 0)
+                {
+                    Logger.Warning("No Kindle process found");
+                    return;
+                }
+
+                Process kindleProcess = processes[0];
+                uint kindleProcessId = (uint)kindleProcess.Id;
+                Logger.Info($"Kindle Process ID: {kindleProcessId}");
+                Logger.Info($"MainWindowHandle: {kindleProcess.MainWindowHandle}");
+                Logger.Info($"MainWindowTitle: {kindleProcess.MainWindowTitle}");
+
+                List<IntPtr> kindleWindows = new List<IntPtr>();
+
+                // Enumerate all top-level windows
+                EnumWindows((hWndEnum, lParam) =>
+                {
+                    GetWindowThreadProcessId(hWndEnum, out uint processId);
+                    if (processId == kindleProcessId)
+                    {
+                        kindleWindows.Add(hWndEnum);
+                    }
+                    return true;
+                }, IntPtr.Zero);
+
+                Logger.Info($"Found {kindleWindows.Count} Kindle windows");
+
+                for (int i = 0; i < kindleWindows.Count; i++)
+                {
+                    IntPtr hwnd = kindleWindows[i];
+                    Logger.Info($"\n--- Window {i + 1} ---");
+                    Logger.Info($"Handle: {hwnd}");
+
+                    // Get window title
+                    System.Text.StringBuilder title = new System.Text.StringBuilder(256);
+                    GetWindowText(hwnd, title, title.Capacity);
+                    Logger.Info($"Title: {title}");
+
+                    // Get class name
+                    System.Text.StringBuilder className = new System.Text.StringBuilder(256);
+                    GetClassName(hwnd, className, className.Capacity);
+                    Logger.Info($"ClassName: {className}");
+
+                    // Get window state
+                    bool isVisible = IsWindowVisible(hwnd);
+                    bool isIconic = IsIconic(hwnd);
+                    Rectangle bounds = GetWindowBounds(hwnd);
+                    GetWindowPlacement(hwnd, out WINDOWPLACEMENT placement);
+
+                    Logger.Info($"IsVisible: {isVisible}");
+                    Logger.Info($"IsIconic: {isIconic}");
+                    Logger.Info($"Bounds: {bounds}");
+                    Logger.Info($"ShowCmd: {placement.showCmd}");
+                    Logger.Info($"rcNormalPosition: {placement.rcNormalPosition}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Error enumerating windows: {ex.Message}", ex);
+            }
         }
 
         /// <summary>
