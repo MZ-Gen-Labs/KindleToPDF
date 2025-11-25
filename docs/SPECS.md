@@ -209,6 +209,43 @@ Kindle for PCのページめくり、画面キャプチャ、PDF作成を自動�
     - **右送り (JP)**: Prev=`→`, Next=`←`
     - **左送り (EN)**: Prev=`←`, Next=`→`
 
+### 8. [NEW] Kindleウィンドウ検出
+- **目的**: Kindle for PCの正しいメインウィンドウを特定して操作する。
+- **背景**: 
+    - Kindle for PCは複数のウィンドウ（7つ程度）を持つマルチウィンドウアプリケーション
+    - `Process.MainWindowHandle` は内部で使用される隠しウィンドウ（Internet Explorer_Hidden）を返す
+    - 実際のメインウィンドウは別のウィンドウハンドルとして存在する
+- **実装方法**:
+    - `EnumWindows` APIを使用してKindleプロセスに属するすべてのウィンドウを列挙
+    - 各ウィンドウのクラス名（`GetClassName`）とタイトル（`GetWindowText`）を取得
+    - クラス名が `Qt5QWindowIcon` で、タイトルに "for PC" が含まれるウィンドウをメインウィンドウとして特定
+- **メインウィンドウの特徴**:
+    - ClassName: `Qt5QWindowIcon`
+    - Title: "Kindle for PC msi" または "Kindle for PC [デバイス名] - [書籍名]"
+    - 最小化時: `IsIconic: True`, Bounds: `{X=-32000, Y=-32000, ...}`
+    - 通常時: `IsIconic: False`, 通常の画面座標
+- **使用API**:
+    - `EnumWindows`: すべてのトップレベルウィンドウを列挙
+    - `GetWindowThreadProcessId`: ウィンドウが属するプロセスIDを取得
+    - `GetClassName`: ウィンドウのクラス名を取得
+    - `GetWindowText`: ウィンドウのタイトルを取得
+- **詳細**: `docs/KINDLE_WINDOW_DETECTION.md` を参照
+
+### 9. [NEW] ウィンドウ操作（最小化・復元・最大化）
+- **最小化**: `ShowWindow(hWnd, SW_MINIMIZE)` でKindleウィンドウを最小化
+- **復元**: 
+    - `IsIconic` で最小化状態を確認
+    - 最小化されている場合は `ShowWindow(hWnd, SW_RESTORE)` で復元
+    - 復元完了を待機してから次の操作へ
+- **最大化**:
+    - 最小化されている場合は先に復元
+    - `ShowWindowAsync(hWnd, SW_MAXIMIZE)` で最大化
+    - `SetForegroundWindow` で前面に表示
+- **注意事項**:
+    - 最小化状態から直接 `SW_MAXIMIZE` を実行するとハングする可能性がある
+    - 必ず復元してから最大化する手順を踏む
+    - 正しいウィンドウハンドルを使用することが重要
+
 ## 非機能要件
 - **パフォーマンス**: ページ飛ばしを防ぐため、キャプチャ処理の遅延を最小限にする。
 - **ユーザビリティ**: 設定（間隔、ページ数、出力パス）のためのシンプルなGUI。
