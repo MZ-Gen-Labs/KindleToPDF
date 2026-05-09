@@ -3,34 +3,51 @@
         xmlns:vm="using:KindleToPDF.Avalonia.ViewModels"
         x:Class="KindleToPDF.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="KindleToPDF (Mac/Win対応版)" Width="600" Height="400">
+        Title="KindleToPDF (Mac対応版)" Width="600" Height="550"
+        WindowStartupLocation="CenterScreen">
 
     <StackPanel Margin="20" Spacing="15">
         <TextBlock Text="Kindle to PDF Converter" FontSize="24" FontWeight="Bold" />
 
-        <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="Start Capture"
-                    Command="{Binding StartCommand}"
-                    Background="Green" Foreground="White" Padding="10"/>
+        <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Padding="15">
+            <Grid ColumnDefinitions="140, *" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,0,0,0">
+                
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="保存先フォルダ:" VerticalAlignment="Center"/>
+                <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*, Auto">
+                    <TextBox Grid.Column="0" Text="{Binding OutputDirectory}" IsReadOnly="True" PlaceholderText="/tmp"/>
+                    <Button Grid.Column="1" Content="参照..." Click="OnBrowseFolderClick" Margin="5,0,0,0"/>
+                </Grid>
 
-            <Button Content="Stop"
-                    Command="{Binding StopCommand}"
-                    Background="Red" Foreground="White" Padding="10"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="ベースファイル名:" VerticalAlignment="Center" Margin="0,15,0,0"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding BaseFileName}" PlaceholderText="KindleBook" Margin="0,15,0,0"/>
 
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="5">
-                <TextBlock Text="Interval (ms):" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                <TextBox Text="{Binding Interval}" Width="60" VerticalAlignment="Center"/>
-            </StackPanel>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="ページめくり待機(ms):" VerticalAlignment="Center" Margin="0,15,0,0"/>
+                <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding IntervalDecimal}" Minimum="300" Maximum="5000" Increment="100" Margin="0,15,0,0"/>
 
-            <CheckBox IsChecked="{Binding AutoDetect}" Content="Auto Detect" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="ページ方向:" VerticalAlignment="Center" Margin="0,15,0,0"/>
+                <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="15" Margin="0,15,0,0">
+                    <RadioButton Content="右開き (和書/マンガ)" IsChecked="{Binding IsRightToLeft}"/>
+                    <RadioButton Content="左開き (洋書)" IsChecked="{Binding IsLeftToRight}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+            <Button Content="▶ Start Capture" 
+                    Command="{Binding StartCommand}" 
+                    Background="#28a745" Foreground="White" Padding="20,10" FontSize="16" FontWeight="Bold"/>
+            
+            <Button Content="■ Stop" 
+                    Command="{Binding StopCommand}" 
+                    Background="#dc3545" Foreground="White" Padding="20,10" FontSize="16" FontWeight="Bold"/>
         </StackPanel>
 
-        <TextBox Text="{Binding LogText}"
-                 Height="200"
-                 AcceptsReturn="True"
+        <TextBox Text="{Binding LogText}" 
+                 Height="180" 
+                 AcceptsReturn="True" 
                  TextWrapping="Wrap"
                  IsReadOnly="True"
+                 FontFamily="Menlo, Consolas, Monospace"
                  ScrollViewer.VerticalScrollBarVisibility="Auto"/>
     </StackPanel>
-
 </Window>
