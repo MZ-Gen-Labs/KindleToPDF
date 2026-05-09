@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using KindleToPDF.Avalonia.ViewModels;
 using KindleToPDF.Avalonia.Views;
+using KindleToPDF.Core;
 
 namespace KindleToPDF.Avalonia;
 

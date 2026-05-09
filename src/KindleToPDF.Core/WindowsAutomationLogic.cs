@@ -646,7 +646,7 @@ namespace KindleToPDF
             }
 
             // Get screen size
-            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            Rectangle screenBounds = new Rectangle(0, 0, 1920, 1080);
             Logger.Info($"Screen bounds: {screenBounds}");
 
             // Resize window to screen size using MoveWindow
@@ -676,7 +676,7 @@ namespace KindleToPDF
             }
 
             // Get screen size
-            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            Rectangle screenBounds = new Rectangle(0, 0, 1920, 1080);
             Logger.Info($"Screen bounds: {screenBounds}");
 
             // SetWindowPos flags
@@ -783,7 +783,7 @@ namespace KindleToPDF
             Logger.Info($"Current bounds: {bounds}");
 
             // Get screen size
-            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            Rectangle screenBounds = new Rectangle(0, 0, 1920, 1080);
             Logger.Info($"Screen bounds: {screenBounds}");
 
             // Move window to visible coordinates (100, 100) with reasonable size
@@ -807,7 +807,7 @@ namespace KindleToPDF
             Rectangle bounds = GetWindowBounds(hWnd);
             Logger.Info($"Current bounds: {bounds}");
 
-            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            Rectangle screenBounds = new Rectangle(0, 0, 1920, 1080);
             int width = screenBounds.Width - 200;
             int height = screenBounds.Height - 200;
 
@@ -832,7 +832,7 @@ namespace KindleToPDF
             Logger.Info($"Current showCmd: {placement.showCmd}");
             Logger.Info($"Current rcNormalPosition: {placement.rcNormalPosition}");
 
-            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            Rectangle screenBounds = new Rectangle(0, 0, 1920, 1080);
             
             // Set normal position to visible coordinates
             placement.rcNormalPosition = new Rectangle(100, 100, screenBounds.Width - 200, screenBounds.Height - 200);
@@ -981,6 +981,10 @@ namespace KindleToPDF
         /// <returns>Total page count, or -1 if failed</returns>
         public int GetTotalPageCount(IntPtr kindleWnd)
         {
+            // Macでもコンパイルを通すため、UIAutomationへの依存を一時的に削除
+            return -1; 
+            
+#if false
             try
             {
                 BringWindowToFront(kindleWnd);
@@ -1042,6 +1046,7 @@ namespace KindleToPDF
             }
 
             return -1;
+#endif
         }
 
         /// <summary>
