@@ -10,7 +10,7 @@ namespace KindleToPDF
 {
     public class CaptureService
     {
-        private readonly AutomationLogic _automation;
+        private readonly IAutomationLogic _automation;
         private readonly AppSettings _settings;
 
         // UI側に状態を通知するためのイベント
@@ -18,7 +18,7 @@ namespace KindleToPDF
         public event Action<string>? OnPageCaptured;
         public event Action? OnLastPageDetected;
 
-        public CaptureService(AutomationLogic automation, AppSettings settings)
+        public CaptureService(IAutomationLogic automation, AppSettings settings)
         {
             _automation = automation;
             _settings = settings;

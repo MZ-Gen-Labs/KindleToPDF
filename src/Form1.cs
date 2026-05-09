@@ -6,12 +6,13 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace KindleToPDF
 {
     public partial class Form1 : Form
     {
-        private AutomationLogic _automation = null!;
+        private IAutomationLogic _automation = null!;
         private PdfGenerator _pdfGenerator = null!;
         private CancellationTokenSource _cts = null!;
         private List<string> _capturedImages = null!;
@@ -127,8 +128,18 @@ namespace KindleToPDF
                 {
                     Logger.Warning($"Failed to load app icon: {ex.Message}");
                 }
+                
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    _automation = new MacAutomationLogic();
+                    Log("Mac環境を検出しました。Mac用自動化モジュールを読み込みます。");
+                }
+                else
+                {
+                    _automation = new WindowsAutomationLogic();
+                    Log("Windows環境を検出しました。Windows用自動化モジュールを読み込みます。");
+                }
 
-                _automation = new AutomationLogic();
                 _pdfGenerator = new PdfGenerator();
                 _capturedImages = new List<string>();
                 _captureService = new CaptureService(_automation, _settings);

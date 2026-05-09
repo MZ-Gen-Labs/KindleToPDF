@@ -12,7 +12,7 @@ namespace KindleToPDF
     /// <summary>
     /// Handles automation of Kindle for PC window interactions
     /// </summary>
-    public class AutomationLogic
+    public class WindowsAutomationLogic : IAutomationLogic
     {
         // Win32 API Imports
         [DllImport("user32.dll", SetLastError = true)]
