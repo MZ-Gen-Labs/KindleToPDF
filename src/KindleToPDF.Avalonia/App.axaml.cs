@@ -20,9 +20,13 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            IAutomationLogic automation = new MacAutomationLogic();
+            var settings = new AppSettings();
+            var captureService = new CaptureService(automation, settings);
+
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = new MainWindowViewModel(captureService, automation),
             };
         }
 

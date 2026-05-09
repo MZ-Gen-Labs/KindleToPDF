@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using SixLabors.ImageSharp;
+using Rectangle = SixLabors.ImageSharp.Rectangle;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 

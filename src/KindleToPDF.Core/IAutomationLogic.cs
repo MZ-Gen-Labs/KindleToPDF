@@ -1,5 +1,6 @@
 using System;
 using SixLabors.ImageSharp;
+using Rectangle = SixLabors.ImageSharp.Rectangle;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace KindleToPDF

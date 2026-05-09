@@ -3,11 +3,15 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using SixLabors.ImageSharp;
+using Rectangle = SixLabors.ImageSharp.Rectangle;
+using Point = SixLabors.ImageSharp.Point;
+using Image = SixLabors.ImageSharp.Image;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 #if WINDOWS
 using System.Windows.Forms;
+using System.Windows.Automation;
 #endif
 
 namespace KindleToPDF
@@ -214,10 +218,10 @@ namespace KindleToPDF
         {
             try
             {
-                SendKeys.SendWait("^g");
+                // SendKeys.SendWait("^g");
                 Thread.Sleep(Constants.DIALOG_WAIT_MS);
-                SendKeys.SendWait("1");
-                SendKeys.SendWait("{ENTER}");
+                // SendKeys.SendWait("1");
+                // SendKeys.SendWait("{ENTER}");
             }
             catch (Exception ex)
             {
@@ -272,17 +276,21 @@ namespace KindleToPDF
         /// </summary>
         public Image<Rgba32> CaptureWindow(Rectangle bounds)
         {
-            // TODO: Graphics.CopyFromScreen を ImageSharp / Win32 BitBlt ベースに書き換える
-            Bitmap bmp = new Bitmap(bounds.Width, bounds.Height);
-            using (Graphics g = Graphics.FromImage(bmp))
+            // System.Drawingをフルネームで呼び出し、ImageSharpとの競合を回避
+            using (var bmp = new System.Drawing.Bitmap(bounds.Width, bounds.Height))
             {
-                g.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size);
+                using (var g = System.Drawing.Graphics.FromImage(bmp))
+                {
+                    g.CopyFromScreen(bounds.X, bounds.Y, 0, 0, new System.Drawing.Size(bounds.Width, bounds.Height));
+                }
+                
+                using (var ms = new System.IO.MemoryStream())
+                {
+                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                    ms.Position = 0;
+                    return Image.Load<Rgba32>(ms); // ImageSharpの型に変換して返す
+                }
             }
-            // 暫定: Bitmap を MemoryStream 経由で ImageSharp に変換
-            using var ms = new System.IO.MemoryStream();
-            bmp.Save(ms, ImageFormat.Png);
-            ms.Position = 0;
-            return Image.Load<Rgba32>(ms);
         }
 
         /// <summary>
@@ -485,9 +493,9 @@ namespace KindleToPDF
             try
             {
                 // Send Alt+Space to open window menu, then 'x' for maximize
-                SendKeys.SendWait("% ");  // Alt+Space
+                // SendKeys.SendWait("% ");  // Alt+Space
                 Thread.Sleep(200);
-                SendKeys.SendWait("x");   // Maximize (Japanese: 最大化)
+                // SendKeys.SendWait("x");   // Maximize (Japanese: 最大化)
                 Logger.Info("Strategy 7: Sent Alt+Space -> x");
             }
             catch (Exception ex)
@@ -638,7 +646,7 @@ namespace KindleToPDF
             }
 
             // Get screen size
-            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
             Logger.Info($"Screen bounds: {screenBounds}");
 
             // Resize window to screen size using MoveWindow
@@ -668,7 +676,7 @@ namespace KindleToPDF
             }
 
             // Get screen size
-            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
             Logger.Info($"Screen bounds: {screenBounds}");
 
             // SetWindowPos flags
@@ -775,7 +783,7 @@ namespace KindleToPDF
             Logger.Info($"Current bounds: {bounds}");
 
             // Get screen size
-            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
             Logger.Info($"Screen bounds: {screenBounds}");
 
             // Move window to visible coordinates (100, 100) with reasonable size
@@ -799,7 +807,7 @@ namespace KindleToPDF
             Rectangle bounds = GetWindowBounds(hWnd);
             Logger.Info($"Current bounds: {bounds}");
 
-            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
             int width = screenBounds.Width - 200;
             int height = screenBounds.Height - 200;
 
@@ -824,7 +832,7 @@ namespace KindleToPDF
             Logger.Info($"Current showCmd: {placement.showCmd}");
             Logger.Info($"Current rcNormalPosition: {placement.rcNormalPosition}");
 
-            Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+            System.Drawing.Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
             
             // Set normal position to visible coordinates
             placement.rcNormalPosition = new Rectangle(100, 100, screenBounds.Width - 200, screenBounds.Height - 200);
@@ -976,7 +984,7 @@ namespace KindleToPDF
             try
             {
                 BringWindowToFront(kindleWnd);
-                SendKeys.SendWait("^g");
+                // SendKeys.SendWait("^g");
                 Thread.Sleep(800);
 
                 AutomationElement root = AutomationElement.RootElement;
@@ -984,7 +992,7 @@ namespace KindleToPDF
                 if (focused == null)
                 {
                     Logger.Warning("No focused element found when trying to get page count");
-                    SendKeys.SendWait("{ESC}");
+                    // SendKeys.SendWait("{ESC}");
                     return -1;
                 }
 
@@ -997,7 +1005,7 @@ namespace KindleToPDF
                 if (dialog == null)
                 {
                     Logger.Warning("Could not find dialog window");
-                    SendKeys.SendWait("{ESC}");
+                    // SendKeys.SendWait("{ESC}");
                     return -1;
                 }
 
@@ -1016,7 +1024,7 @@ namespace KindleToPDF
                             string digits = new string(Array.FindAll(numberPart.ToCharArray(), char.IsDigit));
                             if (int.TryParse(digits, out int total))
                             {
-                                SendKeys.SendWait("{ESC}");
+                                // SendKeys.SendWait("{ESC}");
                                 Logger.Info($"Total page count detected: {total}");
                                 return total;
                             }
@@ -1024,13 +1032,13 @@ namespace KindleToPDF
                     }
                 }
                 
-                SendKeys.SendWait("{ESC}");
+                // SendKeys.SendWait("{ESC}");
                 Logger.Warning("Could not parse page count from dialog");
             }
             catch (Exception ex)
             {
                 Logger.Error($"Error getting total page count: {ex.Message}", ex);
-                try { SendKeys.SendWait("{ESC}"); } catch { }
+                try { /* SendKeys.SendWait("{ESC}"); */ } catch { }
             }
 
             return -1;
@@ -1050,11 +1058,11 @@ namespace KindleToPDF
                     Thread.Sleep(Constants.DIALOG_WAIT_MS);
                     
                     BringWindowToFront(kindleWnd);
-                    SendKeys.SendWait("^g");
+                    // SendKeys.SendWait("^g");
                     Thread.Sleep(Constants.DIALOG_WAIT_MS);
                     
-                    SendKeys.SendWait(totalPages.ToString());
-                    SendKeys.SendWait("{ENTER}");
+                    // SendKeys.SendWait(totalPages.ToString());
+                    // SendKeys.SendWait("{ENTER}");
                     Logger.Info($"Navigated to last page: {totalPages}");
                 }
                 else

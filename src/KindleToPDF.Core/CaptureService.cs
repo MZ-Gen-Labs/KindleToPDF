@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp;
+using Rectangle = SixLabors.ImageSharp.Rectangle;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -47,7 +48,7 @@ namespace KindleToPDF
                 Image<Rgba32> currentImage;
 
                 // クロップ処理
-                if (_settings.CropRect != Rectangle.Empty)
+                if (_settings.CropRect.Width > 0 && _settings.CropRect.Height > 0)
                 {
                     int relX = _settings.CropRect.X - bounds.X;
                     int relY = _settings.CropRect.Y - bounds.Y;
