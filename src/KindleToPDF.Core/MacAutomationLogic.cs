@@ -10,19 +10,20 @@ namespace KindleToPDF.Core
 {
     public class MacAutomationLogic : IAutomationLogic
     {
+        // ★【重要】お使いのKindleアプリの名前に変更してください（例: "Kindle Classic", "Amazon Kindle" など）
+        private const string APP_NAME = "Kindle"; 
+
         public IntPtr GetKindleWindow()
         {
-            // Macではプロセス名ベースで操作するため、ダミーのハンドル(1)を返して「見つかった」ことにします
-            string result = RunAppleScriptWithResult("tell application \"System Events\" to exists process \"Kindle\"");
+            string result = RunAppleScriptWithResult($"tell application \"System Events\" to exists process \"{APP_NAME}\"");
             return result.Trim().ToLower() == "true" ? new IntPtr(1) : IntPtr.Zero;
         }
 
         public Rectangle GetWindowBounds(IntPtr hWnd)
         {
-            // AppleScriptでKindleのウィンドウ座標とサイズを取得
-            string script = @"
+            string script = $@"
             tell application ""System Events""
-                tell process ""Kindle""
+                tell process ""{APP_NAME}""
                     set pos to position of window 1
                     set sz to size of window 1
                     return (item 1 of pos) & "","" & (item 2 of pos) & "","" & (item 1 of sz) & "","" & (item 2 of sz)
@@ -38,30 +39,35 @@ namespace KindleToPDF.Core
                     int.TryParse(parts[0], out int x) && int.TryParse(parts[1], out int y) &&
                     int.TryParse(parts[2], out int w) && int.TryParse(parts[3], out int h))
                 {
-                    return new Rectangle(x, y, w, h);
+                    // --- 微調整オプション ---
+                    // もし「タイトルバー（上のバー）」が写り込んでしまう場合は、
+                    // 以下の titleBarHeight を 28〜40 程度の数値にしてY座標を下げてください。
+                    int titleBarHeight = 0; 
+                    
+                    return new Rectangle(x, y + titleBarHeight, w, h - titleBarHeight);
                 }
             }
-            return new Rectangle(0, 0, 800, 600); // 取得失敗時のフォールバック
+            
+            // 取得失敗時に固定サイズで撮るのをやめ、エラーを出して原因をわかりやすくします
+            throw new Exception($"Kindleウィンドウの座標取得に失敗しました。(AppleScript結果: '{result}')\nAPP_NAME '{APP_NAME}' が実際のアプリ名と一致しているか確認してください。");
         }
 
         public void BringWindowToFront(IntPtr hWnd)
         {
-            RunAppleScript("tell application \"Kindle\" to activate");
+            RunAppleScript($"tell application \"{APP_NAME}\" to activate");
         }
 
         public Image<Rgba32> CaptureWindow(Rectangle bounds)
         {
-            // Macの screencapture コマンドを使用して一時ファイルに保存
             string tempFile = Path.Combine(Path.GetTempPath(), $"kindle_cap_{Guid.NewGuid()}.png");
             
-            // 文字列結合ではなく、配列を使って安全に引数を構築する
             string[] args = { "-R", $"{bounds.X},{bounds.Y},{bounds.Width},{bounds.Height}", "-x", tempFile };
             RunCommand("screencapture", args);
 
             if (File.Exists(tempFile))
             {
                 var img = Image.Load<Rgba32>(tempFile);
-                File.Delete(tempFile); // 読み込み終わったら削除
+                File.Delete(tempFile); 
                 return img;
             }
             
@@ -70,11 +76,9 @@ namespace KindleToPDF.Core
 
         public void SendPageTurn(IntPtr hWnd, bool isRightToLeft)
         {
-            // isRightToLeftがtrue(日本語・右開き)なら左矢印(123)、falseなら右矢印(124)
             int keyCode = isRightToLeft ? 123 : 124; 
-            
             string script = $@"
-                tell application ""Kindle"" to activate
+                tell application ""{APP_NAME}"" to activate
                 delay 0.3
                 tell application ""System Events""
                     key code {keyCode}
@@ -87,7 +91,7 @@ namespace KindleToPDF.Core
         {
             int keyCode = isRightToLeft ? 124 : 123;
             string script = $@"
-                tell application ""Kindle"" to activate
+                tell application ""{APP_NAME}"" to activate
                 delay 0.3
                 tell application ""System Events""
                     key code {keyCode}
@@ -138,27 +142,20 @@ namespace KindleToPDF.Core
             }
         }
 
-        public bool IsKeyDown(int vKey) 
-        {
-            // MacではC#からグローバルなキーボードフックを取得するのが非常に難しいため、
-            // 停止は「Avalonia画面のStopボタン」で行う運用とし、ここは一旦 false を返します。
-            return false; 
-        }
+        public bool IsKeyDown(int vKey) { return false; }
         
         public string? GetBookTitleFromWindow(IntPtr hWnd) 
         {
-            string script = "tell application \"System Events\" to tell process \"Kindle\" to get name of window 1";
+            string script = $"tell application \"System Events\" to tell process \"{APP_NAME}\" to get name of window 1";
             string title = RunAppleScriptWithResult(script).Trim();
             return string.IsNullOrEmpty(title) ? "Kindle_Book" : title;
         }
 
-        public void SendHome(IntPtr hWnd) { /* Mac用ショートカットの実装 */ }
-        public void GoToLastPage(IntPtr hWnd) { /* Mac用ショートカットの実装 */ }
-        public void MaximizeKindleWindow(IntPtr hWnd) { /* Mac用の最大化処理 */ }
-        public void MinimizeKindleWindow(IntPtr hWnd) { /* Mac用の最小化処理 */ }
-        public void ToggleFullScreen(IntPtr hWnd) { /* Mac用のフルスクリーン処理 */ }
-
-        // --- ヘルパーメソッド ---
+        public void SendHome(IntPtr hWnd) { }
+        public void GoToLastPage(IntPtr hWnd) { }
+        public void MaximizeKindleWindow(IntPtr hWnd) { }
+        public void MinimizeKindleWindow(IntPtr hWnd) { }
+        public void ToggleFullScreen(IntPtr hWnd) { }
 
         private void RunAppleScript(string script)
         {
@@ -169,7 +166,6 @@ namespace KindleToPDF.Core
         {
             try
             {
-                // シングルクォートで囲むハックをやめ、配列として渡す
                 return RunCommand("osascript", new[] { "-e", script });
             }
             catch (Exception ex)
@@ -179,7 +175,6 @@ namespace KindleToPDF.Core
             }
         }
 
-        // 第2引数を string から string[] に変更
         private string RunCommand(string command, string[] arguments)
         {
             var processInfo = new ProcessStartInfo
@@ -190,7 +185,6 @@ namespace KindleToPDF.Core
                 CreateNoWindow = true
             };
 
-            // .NET Core推奨の ArgumentList を使って安全に引数を追加
             foreach (var arg in arguments)
             {
                 processInfo.ArgumentList.Add(arg);
