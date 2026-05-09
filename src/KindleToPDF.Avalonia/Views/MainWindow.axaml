@@ -16,6 +16,13 @@
             <Button Content="Stop"
                     Command="{Binding StopCommand}"
                     Background="Red" Foreground="White" Padding="10"/>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="5">
+                <TextBlock Text="Interval (ms):" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                <TextBox Text="{Binding Interval}" Width="60" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <CheckBox IsChecked="{Binding AutoDetect}" Content="Auto Detect" VerticalAlignment="Center" Margin="10,0,0,0"/>
         </StackPanel>
 
         <TextBox Text="{Binding LogText}"

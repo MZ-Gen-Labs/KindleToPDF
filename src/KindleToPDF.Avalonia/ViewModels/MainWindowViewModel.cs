@@ -14,7 +14,7 @@ public class MainWindowViewModel : ViewModelBase
     private readonly IAutomationLogic _automation;
     private CancellationTokenSource? _cts;
 
-    // 画面にバインド（表示）するプロパティ
+    private readonly AppSettings _settings;
     private string _logText = "";
     public string LogText
     {
@@ -22,14 +22,35 @@ public class MainWindowViewModel : ViewModelBase
         set => SetProperty(ref _logText, value);
     }
 
+    public int Interval
+    {
+        get => _settings.Interval;
+        set
+        {
+            _settings.Interval = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool AutoDetect
+    {
+        get => _settings.AutoDetect;
+        set
+        {
+            _settings.AutoDetect = value;
+            OnPropertyChanged();
+        }
+    }
+
     // コマンド（ボタンが押された時の処理）
     public ICommand StartCommand { get; }
     public ICommand StopCommand { get; }
 
-    public MainWindowViewModel(CaptureService captureService, IAutomationLogic automation)
+    public MainWindowViewModel(CaptureService captureService, IAutomationLogic automation, AppSettings settings)
     {
         _captureService = captureService;
         _automation = automation;
+        _settings = settings;
 
         // イベントを購読して、ログが来たらUIを更新する
         _captureService.OnLog += msg =>

@@ -54,8 +54,8 @@ namespace KindleToPDF.Core
             // Macの screencapture コマンドを使用して一時ファイルに保存
             string tempFile = Path.Combine(Path.GetTempPath(), $"kindle_cap_{Guid.NewGuid()}.png");
             
-            // -R x,y,w,h で指定領域をキャプチャ, -x で無音
-            string args = $"-R {bounds.X},{bounds.Y},{bounds.Width},{bounds.Height} -x \"{tempFile}\"";
+            // 文字列結合ではなく、配列を使って安全に引数を構築する
+            string[] args = { "-R", $"{bounds.X},{bounds.Y},{bounds.Width},{bounds.Height}", "-x", tempFile };
             RunCommand("screencapture", args);
 
             if (File.Exists(tempFile))
@@ -75,6 +75,7 @@ namespace KindleToPDF.Core
             
             string script = $@"
                 tell application ""Kindle"" to activate
+                delay 0.3
                 tell application ""System Events""
                     key code {keyCode}
                 end tell
@@ -85,7 +86,14 @@ namespace KindleToPDF.Core
         public void SendPrevPage(IntPtr hWnd, bool isRightToLeft)
         {
             int keyCode = isRightToLeft ? 124 : 123;
-            RunAppleScript($"tell application \"System Events\" to key code {keyCode}");
+            string script = $@"
+                tell application ""Kindle"" to activate
+                delay 0.3
+                tell application ""System Events""
+                    key code {keyCode}
+                end tell
+            ";
+            RunAppleScript(script);
         }
 
         public void SendNextPage(IntPtr hWnd, bool isRightToLeft)
@@ -161,7 +169,8 @@ namespace KindleToPDF.Core
         {
             try
             {
-                return RunCommand("osascript", $"-e '{script.Replace("'", "'\\''")}'");
+                // シングルクォートで囲むハックをやめ、配列として渡す
+                return RunCommand("osascript", new[] { "-e", script });
             }
             catch (Exception ex)
             {
@@ -170,16 +179,22 @@ namespace KindleToPDF.Core
             }
         }
 
-        private string RunCommand(string command, string arguments)
+        // 第2引数を string から string[] に変更
+        private string RunCommand(string command, string[] arguments)
         {
             var processInfo = new ProcessStartInfo
             {
                 FileName = command,
-                Arguments = arguments,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
+
+            // .NET Core推奨の ArgumentList を使って安全に引数を追加
+            foreach (var arg in arguments)
+            {
+                processInfo.ArgumentList.Add(arg);
+            }
 
             using var process = Process.Start(processInfo);
             process?.WaitForExit();
