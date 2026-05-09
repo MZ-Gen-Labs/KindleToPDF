@@ -129,6 +129,11 @@ public class MainWindowViewModel : ViewModelBase
 
         try
         {
+            // UI上の設定をAppSettingsに確実に反映させる
+            _settings.Interval = (int)(IntervalDecimal ?? 1000);
+            _settings.PageDirection = IsRightToLeft ? 0 : 1;
+            // 必要に応じて他の設定（StartNumber等）もここでセット可能
+            
             // 設定を保存
             _settings.Save();
             
