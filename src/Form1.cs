@@ -15,6 +15,7 @@ namespace KindleToPDF
         private PdfGenerator _pdfGenerator = null!;
         private CancellationTokenSource _cts = null!;
         private List<string> _capturedImages = null!;
+        private CaptureService _captureService = null!;
 
         private Button btnStart = null!, btnStop = null!, btnAbort = null!;
         private Button btnTop = null!, btnPrev = null!, btnNext = null!, btnBottom = null!, btnFullScreen = null!;
@@ -130,6 +131,27 @@ namespace KindleToPDF
                 _automation = new AutomationLogic();
                 _pdfGenerator = new PdfGenerator();
                 _capturedImages = new List<string>();
+                _captureService = new CaptureService(_automation, _settings);
+
+                // Subscribe to CaptureService events
+                _captureService.OnLog += (msg) => Log(msg);
+                _captureService.OnPageCaptured += (imgPath) =>
+                {
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() => 
+                        {
+                            _capturedImages.Add(imgPath);
+                            UpdateCaptureCount();
+                        }));
+                    }
+                    else
+                    {
+                        _capturedImages.Add(imgPath);
+                        UpdateCaptureCount();
+                    }
+                };
+                _captureService.OnLastPageDetected += () => _cts?.Cancel();
                 
                 ApplySettingsToUI();
                 File.AppendAllText("debug_log.txt", "Form1 Ctor: ApplySettingsToUI Done\n");
@@ -1593,11 +1615,11 @@ namespace KindleToPDF
                 }
             }
 
-            if (!int.TryParse(txtInterval.Text, out int interval)) interval = 1000;
-            if (!int.TryParse(txtPages.Text, out int maxPages)) maxPages = 10;
-            bool autoDetect = chkAutoDetect.Checked;
-            bool stopAtLast = chkStopAtLastPage.Checked;
-            bool isRightToLeft = rbDirectionR2L.Checked;
+            if (int.TryParse(txtInterval.Text, out int interval)) _settings.Interval = interval;
+            if (int.TryParse(txtPages.Text, out int pages)) _settings.PageCount = pages;
+            _settings.AutoDetect = chkAutoDetect.Checked;
+            _settings.StopAtLastPage = chkStopAtLastPage.Checked;
+            _settings.PageDirection = rbDirectionL2R.Checked ? 1 : 0;
 
             if (_cts == null || _cts.IsCancellationRequested) _cts = new CancellationTokenSource();
             
@@ -1618,7 +1640,7 @@ namespace KindleToPDF
             try
             {
                 int startIndex = _capturedImages.Count;
-                await Task.Run(() => RunAutomation(kindleHandle, interval, maxPages, tempDir, autoDetect, stopAtLast, startIndex, _cts.Token, isRightToLeft));
+                await _captureService.RunCaptureAsync(kindleHandle, tempDir, startIndex, _cts.Token);
             }
             catch (OperationCanceledException)
             {
@@ -1668,13 +1690,13 @@ namespace KindleToPDF
                 else
                 {
                     // Paused (ESC) or Finished
-                    if (_capturedImages.Count >= maxPages && !stopAtLast)
+                    if (_capturedImages.Count >= _settings.PageCount && !_settings.StopAtLastPage)
                     {
                         // Finished normally (page count reached)
                         await FinalizePdf();
                         ResetUI();
                     }
-                    else if (stopAtLast && _capturedImages.Count > 0) // Heuristic for stopAtLast finish
+                    else if (_settings.StopAtLastPage && _capturedImages.Count > 0) // Heuristic for stopAtLast finish
                     {
                          // Paused or Finished logic...
                          // If we are here, we are NOT cancelled.
@@ -1856,200 +1878,6 @@ namespace KindleToPDF
             btnAbort.Enabled = false;
         }
 
-        private void RunAutomation(IntPtr hWnd, int interval, int maxPages, string tempDir, bool autoDetect, bool stopAtLast, int startIndex, CancellationToken token, bool isRightToLeft)
-        {
-            Bitmap? previousImage = null;
-            const int VK_DELETE = 0x2E;
-
-            for (int i = startIndex; i < maxPages || stopAtLast; i++)
-            {
-                if (_automation.IsKeyDown(VK_DELETE))
-                {
-                    break; // Pause
-                }
-                token.ThrowIfCancellationRequested();
-
-                Rectangle bounds = _automation.GetWindowBounds(hWnd);
-                if (bounds.Width <= 0 || bounds.Height <= 0) throw new Exception("Invalid window bounds");
-
-                Bitmap rawImage = _automation.CaptureWindow(bounds);
-                Bitmap currentImage;
-
-                if (_cropRect != Rectangle.Empty)
-                {
-                    Rectangle windowRect = bounds;
-                    Rectangle screenCrop = _cropRect;
-                    
-                    int relX = screenCrop.X - windowRect.X;
-                    int relY = screenCrop.Y - windowRect.Y;
-                    Rectangle relativeCrop = new Rectangle(relX, relY, screenCrop.Width, screenCrop.Height);
-                    
-                    currentImage = _automation.CropBitmap(rawImage, relativeCrop);
-                    rawImage.Dispose();
-                }
-                else
-                {
-                    currentImage = rawImage;
-                }
-                
-                if (stopAtLast && previousImage != null)
-                {
-                    if (_automation.AreImagesSame(previousImage, currentImage))
-                    {
-                        Log("Last page detected (no change). Stopping.");
-                        currentImage.Dispose();
-                        // If we stop here, we should probably cancel the token to signal "Done"?
-                        // Or just break.
-                        _cts.Cancel(); // Signal "Done" (Stop)
-                        break;
-                    }
-                }
-                
-                if (previousImage != null) previousImage.Dispose();
-                previousImage = (Bitmap)currentImage.Clone();
-
-                string imgPath = Path.Combine(tempDir, $"page_{i:D4}.png");
-                currentImage.Save(imgPath, ImageFormat.Png);
-                _capturedImages.Add(imgPath);
-                currentImage.Dispose();
-
-                Log($"Captured page {i + 1}");
-
-                if (!stopAtLast && i >= maxPages - 1) break;
-
-                _automation.SendPageTurn(hWnd, isRightToLeft);
-
-                if (autoDetect)
-                {
-                    bool pageChanged = false;
-                    int maxRetries = 40; 
-                    int stableCount = 0;
-                    Bitmap? lastCheck = null;
-
-                    for (int r = 0; r < maxRetries; r++)
-                    {
-                        Thread.Sleep(100);
-                        if (_automation.IsKeyDown(VK_DELETE)) { break; } // Will be caught next loop
-                        token.ThrowIfCancellationRequested();
-
-                        Bitmap currentCheck = _automation.CaptureWindow(bounds);
-                        
-                        if (lastCheck != null)
-                        {
-                            if (_automation.AreImagesSame(lastCheck, currentCheck))
-                            {
-                                stableCount++;
-                            }
-                            else
-                            {
-                                stableCount = 0;
-                            }
-                            lastCheck.Dispose();
-                        }
-                        lastCheck = currentCheck;
-
-                        if (stableCount >= 2)
-                        {
-                            // Check if we actually moved from previous page (unless it's the very first page, but previousImage is null then? No, we set it above)
-                            // Wait, previousImage is set BEFORE page turn.
-                            // So we compare currentCheck with previousImage.
-                            if (!_automation.AreImagesSame(previousImage, currentCheck))
-                            {
-                                pageChanged = true;
-                                lastCheck.Dispose();
-                                break;
-                            }
-                        }
-                    }
-                    if (lastCheck != null) lastCheck.Dispose();
-
-                    if (!pageChanged)
-                    {
-                        Log("Warning: Page turn not detected (timeout or no change).");
-                    }
-                }
-                else
-                {
-                    for(int t=0; t<interval; t+=100)
-                    {
-                        Thread.Sleep(Math.Min(100, interval - t));
-                        if (_automation.IsKeyDown(VK_DELETE)) { break; }
-                        token.ThrowIfCancellationRequested();
-                    }
-                }
-            }
-            if (previousImage != null) previousImage.Dispose();
-        }
-
-        private string GetOutputFilePath(string rawPath)
-        {
-            string dir = Path.GetDirectoryName(rawPath) ?? "";
-            string fileName = Path.GetFileNameWithoutExtension(rawPath);
-            string ext = Path.GetExtension(rawPath);
-            
-            if (_settings.Mode == FileNameMode.Overwrite)
-            {
-                return rawPath;
-            }
-            
-            // Sequential Mode
-            string newPath = rawPath;
-            
-            // If file doesn't exist, we can just use it? 
-            // Spec says "Create sequential files (Rename)". 
-            // If "Number" type, we might want to enforce the number format even if the base file doesn't exist?
-            // Or only if it exists?
-            // Usually sequential means "find the next available name".
-            // But the user requirements imply a specific format: [BookName]_[Number].pdf
-            
-            // Let's implement the logic to generate the name based on the pattern, 
-            // and if it exists, increment until we find a free one (for Number/Alphabet).
-            // For DateTime, we just use the current time.
-            
-            switch (_settings.SeqType)
-            {
-                case SequentialType.Number:
-                    int currentNum = _settings.StartNumber;
-                    while (true)
-                    {
-                        string suffix = currentNum.ToString("D" + _settings.NumberDigits);
-                        newPath = Path.Combine(dir, $"{fileName}_{suffix}{ext}");
-                        if (!File.Exists(newPath)) break;
-                        currentNum++;
-                    }
-                    break;
-                    
-                case SequentialType.Alphabet:
-                    string currentChar = _settings.StartChar;
-                    while (true)
-                    {
-                        newPath = Path.Combine(dir, $"{fileName}_{currentChar}{ext}");
-                        if (!File.Exists(newPath)) break;
-                        currentChar = IncrementAlphabet(currentChar);
-                    }
-                    break;
-                    
-                case SequentialType.DateTime:
-                    string dateStr = DateTime.Now.ToString(_settings.DateTimeFormat);
-                    newPath = Path.Combine(dir, $"{fileName}_{dateStr}{ext}");
-                    // If DateTime collision (unlikely with seconds), we might append a number or just overwrite?
-                    // Let's assume overwrite for same second, or append counter if really needed.
-                    // For now, simple DateTime append.
-                    break;
-            }
-            
-            return newPath;
-        }
-
-        private string IncrementAlphabet(string s)
-        {
-            // Simple increment for last char
-            if (string.IsNullOrEmpty(s)) return "a";
-            char last = s[s.Length - 1];
-            if (last == 'z') return s + "a";
-            if (last == 'Z') return s + "A";
-            return s.Substring(0, s.Length - 1) + (char)(last + 1);
-        }
 
         private async Task FinalizePdf()
         {
@@ -2095,7 +1923,7 @@ namespace KindleToPDF
             }
 
             string fullPath = Path.Combine(outputDir, baseOutputPath);
-            string finalOutputPath = GetOutputFilePath(fullPath);
+            string finalOutputPath = FileNameGenerator.GetOutputFilePath(fullPath, _settings);
 
             double dpi = 0;
             string dpiStr = (string)(Invoke(new Func<string>(() => cmbDpi.SelectedItem?.ToString() ?? "Default")) ?? "Default");
