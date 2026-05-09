@@ -21,35 +21,35 @@ namespace KindleToPDF.Core
 
         public Rectangle GetWindowBounds(IntPtr hWnd)
         {
-            string script = $@"
-            tell application ""System Events""
-                tell process ""{APP_NAME}""
-                    set pos to position of window 1
-                    set sz to size of window 1
-                    return (item 1 of pos) & "","" & (item 2 of pos) & "","" & (item 1 of sz) & "","" & (item 2 of sz)
-                end tell
-            end tell";
-            
-            string result = RunAppleScriptWithResult(script).Trim();
-            
-            if (!string.IsNullOrEmpty(result))
+            // 改行を含む複雑なスクリプトをやめ、ターミナルで成功したシンプルな1行コマンドを2回実行する
+            try
             {
-                var parts = result.Split(',');
-                if (parts.Length == 4 && 
-                    int.TryParse(parts[0], out int x) && int.TryParse(parts[1], out int y) &&
-                    int.TryParse(parts[2], out int w) && int.TryParse(parts[3], out int h))
+                string posStr = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get position of window 1").Trim();
+                string szStr = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get size of window 1").Trim();
+
+                if (!string.IsNullOrEmpty(posStr) && !string.IsNullOrEmpty(szStr))
                 {
-                    // --- 微調整オプション ---
-                    // もし「タイトルバー（上のバー）」が写り込んでしまう場合は、
-                    // 以下の titleBarHeight を 28〜40 程度の数値にしてY座標を下げてください。
-                    int titleBarHeight = 0; 
-                    
-                    return new Rectangle(x, y + titleBarHeight, w, h - titleBarHeight);
+                    var posParts = posStr.Split(',');
+                    var szParts = szStr.Split(',');
+
+                    if (posParts.Length == 2 && szParts.Length == 2 &&
+                        int.TryParse(posParts[0], out int x) && int.TryParse(posParts[1], out int y) &&
+                        int.TryParse(szParts[0], out int w) && int.TryParse(szParts[1], out int h))
+                    {
+                        // --- 微調整オプション ---
+                        // タイトルバーなどが写り込む場合は、ここの数値を 30 などに増やしてください
+                        int titleBarHeight = 0; 
+                        
+                        return new Rectangle(x, y + titleBarHeight, w, h - titleBarHeight);
+                    }
                 }
+                
+                throw new Exception($"座標パース失敗: pos='{posStr}', sz='{szStr}'");
             }
-            
-            // 取得失敗時に固定サイズで撮るのをやめ、エラーを出して原因をわかりやすくします
-            throw new Exception($"Kindleウィンドウの座標取得に失敗しました。(AppleScript結果: '{result}')\nAPP_NAME '{APP_NAME}' が実際のアプリ名と一致しているか確認してください。");
+            catch (Exception ex)
+            {
+                throw new Exception($"Kindleウィンドウの座標取得に失敗しました。\n詳細: {ex.Message}");
+            }
         }
 
         public void BringWindowToFront(IntPtr hWnd)
@@ -170,8 +170,8 @@ namespace KindleToPDF.Core
             }
             catch (Exception ex)
             {
-                Logger.Error($"AppleScript execution failed: {ex.Message}");
-                return string.Empty;
+                // エラーを握りつぶさずにそのまま投げる
+                throw new Exception(ex.Message);
             }
         }
 
@@ -181,6 +181,7 @@ namespace KindleToPDF.Core
             {
                 FileName = command,
                 RedirectStandardOutput = true,
+                RedirectStandardError = true, // ★追加：裏で起きたエラーメッセージも拾う
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
@@ -192,6 +193,14 @@ namespace KindleToPDF.Core
 
             using var process = Process.Start(processInfo);
             process?.WaitForExit();
+            
+            // エラー出力があった場合は例外として投げる
+            string error = process?.StandardError.ReadToEnd() ?? string.Empty;
+            if (!string.IsNullOrEmpty(error))
+            {
+                throw new Exception(error.Trim());
+            }
+
             return process?.StandardOutput.ReadToEnd() ?? string.Empty;
         }
     }
