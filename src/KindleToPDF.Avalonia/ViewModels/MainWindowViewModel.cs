@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
 using KindleToPDF;
+using KindleToPDF.Core;
 
 namespace KindleToPDF.Avalonia.ViewModels;
 
@@ -13,6 +16,9 @@ public class MainWindowViewModel : ViewModelBase
     private readonly IAutomationLogic _automation;
     private readonly AppSettings _settings;
     private CancellationTokenSource? _cts;
+
+    // --- キャプチャした画像パスを保持するリスト ---
+    private readonly List<string> _capturedImages = new();
 
     // === UIにバインドする設定プロパティ ===
     public string OutputDirectory
@@ -96,6 +102,12 @@ public class MainWindowViewModel : ViewModelBase
             Dispatcher.UIThread.Post(() => LogText += $"{DateTime.Now:HH:mm:ss} - {msg}\n");
         };
 
+        // 画像がキャプチャされるたびにリストにパスを追加
+        _captureService.OnPageCaptured += imgPath =>
+        {
+            _capturedImages.Add(imgPath);
+        };
+
         StartCommand = new RelayCommand(async () => await StartCaptureAsync());
         StopCommand = new RelayCommand(() => _cts?.Cancel());
     }
@@ -112,22 +124,59 @@ public class MainWindowViewModel : ViewModelBase
         }
 
         LogText += $"設定を確認: 保存先={OutputDirectory}, 間隔={_settings.Interval}ms, 方向={(IsRightToLeft ? "右開き" : "左開き")}\n";
+        
+        _capturedImages.Clear();
 
         try
         {
             // 設定を保存
             _settings.Save();
             
-            // Core側のロジックを呼び出す
+            // 1. キャプチャ実行
             await _captureService.RunCaptureAsync(hWnd, OutputDirectory, 0, _cts.Token);
+
+            // 2. キャプチャ完了後のPDF生成処理
+            if (_capturedImages.Count > 0)
+            {
+                LogText += "\nキャプチャ完了。PDFの生成を開始します...\n";
+
+                string rawPdfPath = Path.Combine(OutputDirectory, $"{BaseFileName}.pdf");
+                string finalPdfPath = FileNameGenerator.GetOutputFilePath(rawPdfPath, _settings);
+
+                await Task.Run(() => 
+                {
+                    var pdfGen = new PdfGenerator();
+                    pdfGen.CreatePdf(_capturedImages, finalPdfPath, _settings); 
+                });
+
+                LogText += $"🎉 PDFの生成が完了しました！\n保存先: {finalPdfPath}\n";
+
+                // 3. 一時画像ファイルの自動削除
+                LogText += "一時画像ファイルをクリーンアップしています...\n";
+                foreach (var imgPath in _capturedImages)
+                {
+                    if (File.Exists(imgPath))
+                    {
+                        try { File.Delete(imgPath); } catch { }
+                    }
+                }
+                LogText += "完了しました！\n";
+            }
+            else
+            {
+                LogText += "キャプチャされた画像がありませんでした。\n";
+            }
         }
         catch (OperationCanceledException)
         {
             LogText += "キャプチャを停止しました。\n";
+            // 停止された場合でも、それまでに撮った画像があればPDF化するかどうかは悩みどころですが、
+            // 今回はユーザーの要求通りに実装します（キャプチャ完了後のみ実行）。
         }
         catch (Exception ex)
         {
             LogText += $"エラー発生: {ex.Message}\n";
+            Logger.Error("Capture/PDF failed", ex);
         }
     }
 }
