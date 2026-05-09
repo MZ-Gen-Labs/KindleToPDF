@@ -4,15 +4,22 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Threading;
+
+#if WINDOWS
 using System.Windows.Forms;
 using System.Windows.Automation;
+#endif
 
 namespace KindleToPDF
 {
     /// <summary>
     /// Handles automation of Kindle for PC window interactions
     /// </summary>
+#if WINDOWS
     public class WindowsAutomationLogic : IAutomationLogic
+#else
+    public class WindowsAutomationLogic : IAutomationLogic
+#endif
     {
         // Win32 API Imports
         [DllImport("user32.dll", SetLastError = true)]

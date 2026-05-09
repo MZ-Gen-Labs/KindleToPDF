@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PDFsharp" Version="6.2.3" />
+    <ProjectReference Include="..\KindleToPDF.Core\KindleToPDF.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
