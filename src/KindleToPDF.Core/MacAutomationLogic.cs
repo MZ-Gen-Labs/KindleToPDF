@@ -21,35 +21,53 @@ namespace KindleToPDF.Core
 
         public Rectangle GetWindowBounds(IntPtr hWnd)
         {
-            // 改行を含む複雑なスクリプトをやめ、ターミナルで成功したシンプルな1行コマンドを2回実行する
-            try
+            Rectangle bestRect = new Rectangle(0, 0, 0, 0);
+            int maxArea = 0;
+
+            // ウィンドウ1〜3までを調べ、一番「面積が大きい」もの（＝メインの本の画面）を探す
+            for (int i = 1; i <= 3; i++)
             {
-                string posStr = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get position of window 1").Trim();
-                string szStr = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get size of window 1").Trim();
-
-                if (!string.IsNullOrEmpty(posStr) && !string.IsNullOrEmpty(szStr))
+                try
                 {
-                    var posParts = posStr.Split(',');
-                    var szParts = szStr.Split(',');
+                    string posStr = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get position of window {i}").Trim();
+                    string szStr = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get size of window {i}").Trim();
 
-                    if (posParts.Length == 2 && szParts.Length == 2 &&
-                        int.TryParse(posParts[0], out int x) && int.TryParse(posParts[1], out int y) &&
-                        int.TryParse(szParts[0], out int w) && int.TryParse(szParts[1], out int h))
+                    if (!string.IsNullOrEmpty(posStr) && !string.IsNullOrEmpty(szStr))
                     {
-                        // --- 微調整オプション ---
-                        // タイトルバーなどが写り込む場合は、ここの数値を 30 などに増やしてください
-                        int titleBarHeight = 0; 
-                        
-                        return new Rectangle(x, y + titleBarHeight, w, h - titleBarHeight);
+                        var posParts = posStr.Split(',');
+                        var szParts = szStr.Split(',');
+
+                        if (posParts.Length == 2 && szParts.Length == 2 &&
+                            int.TryParse(posParts[0], out int x) && int.TryParse(posParts[1], out int y) &&
+                            int.TryParse(szParts[0], out int w) && int.TryParse(szParts[1], out int h))
+                        {
+                            // 面積を計算
+                            int area = w * h;
+                            if (area > maxArea)
+                            {
+                                maxArea = area;
+                                bestRect = new Rectangle(x, y, w, h);
+                            }
+                        }
                     }
                 }
-                
-                throw new Exception($"座標パース失敗: pos='{posStr}', sz='{szStr}'");
+                catch
+                {
+                    // ウィンドウが存在しない場合のエラーは無視して、次のウィンドウを探す
+                    continue;
+                }
             }
-            catch (Exception ex)
+
+            if (maxArea > 0)
             {
-                throw new Exception($"Kindleウィンドウの座標取得に失敗しました。\n詳細: {ex.Message}");
+                // --- 微調整オプション ---
+                // タイトルバーなどが写り込む場合は、ここの数値を 30 などに増やしてください
+                int titleBarHeight = 0; 
+                
+                return new Rectangle(bestRect.X, bestRect.Y + titleBarHeight, bestRect.Width, bestRect.Height - titleBarHeight);
             }
+
+            throw new Exception($"Kindleのメインウィンドウが見つかりませんでした。(APP_NAME: {APP_NAME})");
         }
 
         public void BringWindowToFront(IntPtr hWnd)
