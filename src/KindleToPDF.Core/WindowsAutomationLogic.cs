@@ -1,13 +1,13 @@
 using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Threading;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 #if WINDOWS
 using System.Windows.Forms;
-using System.Windows.Automation;
 #endif
 
 namespace KindleToPDF
@@ -268,17 +268,21 @@ namespace KindleToPDF
 
         /// <summary>
         /// Captures a screenshot of the specified screen area
+        /// ※ CopyFromScreen は System.Drawing 依存のため、ImageSharp 対応版への書き換えが必要です
         /// </summary>
-        /// <param name="bounds">Screen area to capture</param>
-        /// <returns>Bitmap of the captured area</returns>
-        public Bitmap CaptureWindow(Rectangle bounds)
+        public Image<Rgba32> CaptureWindow(Rectangle bounds)
         {
+            // TODO: Graphics.CopyFromScreen を ImageSharp / Win32 BitBlt ベースに書き換える
             Bitmap bmp = new Bitmap(bounds.Width, bounds.Height);
             using (Graphics g = Graphics.FromImage(bmp))
             {
                 g.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size);
             }
-            return bmp;
+            // 暫定: Bitmap を MemoryStream 経由で ImageSharp に変換
+            using var ms = new System.IO.MemoryStream();
+            bmp.Save(ms, ImageFormat.Png);
+            ms.Position = 0;
+            return Image.Load<Rgba32>(ms);
         }
 
         /// <summary>
@@ -287,29 +291,22 @@ namespace KindleToPDF
         /// <param name="img1">First image</param>
         /// <param name="img2">Second image</param>
         /// <returns>True if images are identical</returns>
-        public bool AreImagesSame(Bitmap img1, Bitmap img2)
+        public bool AreImagesSame(Image<Rgba32> img1, Image<Rgba32> img2)
         {
             if (img1 == null || img2 == null) return false;
             if (img1.Width != img2.Width || img1.Height != img2.Height) return false;
 
+            // ピクセル直接比較 (ImageSharp)
             try
             {
-                BitmapData data1 = img1.LockBits(new Rectangle(0, 0, img1.Width, img1.Height), ImageLockMode.ReadOnly, img1.PixelFormat);
-                BitmapData data2 = img2.LockBits(new Rectangle(0, 0, img2.Width, img2.Height), ImageLockMode.ReadOnly, img2.PixelFormat);
-
-                int bytes = Math.Abs(data1.Stride) * img1.Height;
-                byte[] buffer1 = new byte[bytes];
-                byte[] buffer2 = new byte[bytes];
-
-                Marshal.Copy(data1.Scan0, buffer1, 0, bytes);
-                Marshal.Copy(data2.Scan0, buffer2, 0, bytes);
-
-                img1.UnlockBits(data1);
-                img2.UnlockBits(data2);
-
-                for (int i = 0; i < bytes; i++)
+                for (int y = 0; y < img1.Height; y++)
                 {
-                    if (buffer1[i] != buffer2[i]) return false;
+                    var row1 = img1.Frames.RootFrame.PixelBuffer.DangerousGetRowSpan(y);
+                    var row2 = img2.Frames.RootFrame.PixelBuffer.DangerousGetRowSpan(y);
+                    for (int x = 0; x < img1.Width; x++)
+                    {
+                        if (row1[x] != row2[x]) return false;
+                    }
                 }
                 return true;
             }
@@ -336,29 +333,22 @@ namespace KindleToPDF
         /// <param name="src">Source bitmap</param>
         /// <param name="cropRect">Crop rectangle</param>
         /// <returns>Cropped bitmap</returns>
-        public Bitmap CropBitmap(Bitmap src, Rectangle cropRect)
+        public Image<Rgba32> CropImage(Image<Rgba32> src, Rectangle cropRect)
         {
-            Rectangle rect = new Rectangle(
+            var safeRect = new Rectangle(
                 Math.Max(0, cropRect.X),
                 Math.Max(0, cropRect.Y),
                 Math.Min(src.Width - cropRect.X, cropRect.Width),
                 Math.Min(src.Height - cropRect.Y, cropRect.Height)
             );
 
-            if (rect.Width <= 0 || rect.Height <= 0)
+            if (safeRect.Width <= 0 || safeRect.Height <= 0)
             {
                 Logger.Warning("Invalid crop rectangle, returning clone of original");
-                return (Bitmap)src.Clone();
+                return src.Clone();
             }
 
-            Bitmap target = new Bitmap(rect.Width, rect.Height);
-            using (Graphics g = Graphics.FromImage(target))
-            {
-                g.DrawImage(src, new Rectangle(0, 0, target.Width, target.Height),
-                            rect,
-                            GraphicsUnit.Pixel);
-            }
-            return target;
+            return src.Clone(ctx => ctx.Crop(safeRect));
         }
 
         /// <summary>

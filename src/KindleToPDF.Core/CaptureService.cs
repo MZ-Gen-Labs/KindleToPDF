@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace KindleToPDF
 {
@@ -26,7 +27,7 @@ namespace KindleToPDF
 
         public async Task RunCaptureAsync(IntPtr hWnd, string tempDir, int startIndex, CancellationToken token)
         {
-            Bitmap? previousImage = null;
+            Image<Rgba32>? previousImage = null;
             const int VK_DELETE = 0x2E;
             bool isRightToLeft = _settings.PageDirection == 0;
             int maxPages = _settings.PageCount;
@@ -36,14 +37,14 @@ namespace KindleToPDF
 
             for (int i = startIndex; i < maxPages || stopAtLast; i++)
             {
-                if (_automation.IsKeyDown(VK_DELETE)) break; // Pause
+                if (_automation.IsKeyDown(VK_DELETE)) break;
                 token.ThrowIfCancellationRequested();
 
                 Rectangle bounds = _automation.GetWindowBounds(hWnd);
                 if (bounds.Width <= 0 || bounds.Height <= 0) throw new Exception("Invalid window bounds");
 
-                Bitmap rawImage = _automation.CaptureWindow(bounds);
-                Bitmap currentImage;
+                Image<Rgba32> rawImage = _automation.CaptureWindow(bounds);
+                Image<Rgba32> currentImage;
 
                 // クロップ処理
                 if (_settings.CropRect != Rectangle.Empty)
@@ -51,14 +52,14 @@ namespace KindleToPDF
                     int relX = _settings.CropRect.X - bounds.X;
                     int relY = _settings.CropRect.Y - bounds.Y;
                     Rectangle relativeCrop = new Rectangle(relX, relY, _settings.CropRect.Width, _settings.CropRect.Height);
-                    currentImage = _automation.CropBitmap(rawImage, relativeCrop);
+                    currentImage = _automation.CropImage(rawImage, relativeCrop);
                     rawImage.Dispose();
                 }
                 else
                 {
                     currentImage = rawImage;
                 }
-                
+
                 // 最終ページ判定
                 if (stopAtLast && previousImage != null)
                 {
@@ -70,18 +71,17 @@ namespace KindleToPDF
                         break;
                     }
                 }
-                
+
                 if (previousImage != null) previousImage.Dispose();
-                previousImage = (Bitmap)currentImage.Clone();
+                previousImage = currentImage.Clone();
 
                 // 画像保存
                 string imgPath = Path.Combine(tempDir, $"page_{i:D4}.png");
-                currentImage.Save(imgPath, ImageFormat.Png);
-                
-                // 成功したことをイベントでUIに伝える
+                await currentImage.SaveAsPngAsync(imgPath, token);
+
                 OnPageCaptured?.Invoke(imgPath);
                 OnLog?.Invoke($"Captured page {i + 1}");
-                
+
                 currentImage.Dispose();
 
                 if (!stopAtLast && i >= maxPages - 1) break;
@@ -92,9 +92,9 @@ namespace KindleToPDF
                 if (autoDetect)
                 {
                     bool pageChanged = false;
-                    int maxRetries = 40; 
+                    int maxRetries = 40;
                     int stableCount = 0;
-                    Bitmap? lastCheck = null;
+                    Image<Rgba32>? lastCheck = null;
 
                     for (int r = 0; r < maxRetries; r++)
                     {
@@ -102,18 +102,14 @@ namespace KindleToPDF
                         if (_automation.IsKeyDown(VK_DELETE)) { break; }
                         token.ThrowIfCancellationRequested();
 
-                        Bitmap currentCheck = _automation.CaptureWindow(bounds);
-                        
+                        Image<Rgba32> currentCheck = _automation.CaptureWindow(bounds);
+
                         if (lastCheck != null)
                         {
                             if (_automation.AreImagesSame(lastCheck, currentCheck))
-                            {
                                 stableCount++;
-                            }
                             else
-                            {
                                 stableCount = 0;
-                            }
                             lastCheck.Dispose();
                         }
                         lastCheck = currentCheck;
@@ -124,6 +120,7 @@ namespace KindleToPDF
                             {
                                 pageChanged = true;
                                 lastCheck.Dispose();
+                                lastCheck = null;
                                 break;
                             }
                         }
@@ -131,13 +128,11 @@ namespace KindleToPDF
                     if (lastCheck != null) lastCheck.Dispose();
 
                     if (!pageChanged)
-                    {
                         OnLog?.Invoke("Warning: Page turn not detected (timeout or no change).");
-                    }
                 }
                 else
                 {
-                    for(int t=0; t<interval; t+=100)
+                    for (int t = 0; t < interval; t += 100)
                     {
                         await Task.Delay(Math.Min(100, interval - t), token);
                         if (_automation.IsKeyDown(VK_DELETE)) { break; }

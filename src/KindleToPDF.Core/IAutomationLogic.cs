@@ -1,5 +1,6 @@
 using System;
-using System.Drawing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace KindleToPDF
 {
@@ -25,9 +26,9 @@ namespace KindleToPDF
         void SendNextPage(IntPtr hWnd, bool isRightToLeft);
 
         // 画像・状態取得関連
-        Bitmap CaptureWindow(Rectangle bounds);
-        Bitmap CropBitmap(Bitmap src, Rectangle cropRect);
-        bool AreImagesSame(Bitmap img1, Bitmap img2);
+        Image<Rgba32> CaptureWindow(Rectangle bounds);
+        Image<Rgba32> CropImage(Image<Rgba32> src, Rectangle cropRect);
+        bool AreImagesSame(Image<Rgba32> img1, Image<Rgba32> img2);
         bool IsKeyDown(int vKey);
     }
 }

@@ -1,20 +1,29 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:KindleToPDF.Avalonia.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="KindleToPDF.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="KindleToPDF.Avalonia">
+        Title="KindleToPDF (Mac/Win対応版)" Width="600" Height="400">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+    <StackPanel Margin="20" Spacing="15">
+        <TextBlock Text="Kindle to PDF Converter" FontSize="24" FontWeight="Bold" />
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="Start Capture"
+                    Command="{Binding StartCommand}"
+                    Background="Green" Foreground="White" Padding="10"/>
+
+            <Button Content="Stop"
+                    Command="{Binding StopCommand}"
+                    Background="Red" Foreground="White" Padding="10"/>
+        </StackPanel>
+
+        <TextBox Text="{Binding LogText}"
+                 Height="200"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 IsReadOnly="True"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+    </StackPanel>
 
 </Window>
