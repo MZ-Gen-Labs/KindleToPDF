@@ -38,7 +38,8 @@ namespace KindleToPDF
         public bool SplitDualPage { get; set; } = false; // Auto-split dual pages
         
         // Naming Options
-        public string OutputDirectory { get; set; } = ""; // Default to empty (use current directory or Documents)
+        public string OutputDirectory { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public string BaseFileName { get; set; } = "KindleBook";
         public FileNameMode Mode { get; set; } = FileNameMode.Sequential;
         public SequentialType SeqType { get; set; } = SequentialType.Number;
         public int StartNumber { get; set; } = 1;

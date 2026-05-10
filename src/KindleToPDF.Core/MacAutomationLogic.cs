@@ -21,14 +21,19 @@ namespace KindleToPDF.Core
 
         public Rectangle GetWindowBounds(IntPtr hWnd)
         {
+            // フルスクリーン切り替えに備え、メソッド内でも再度アクティベートを念押し
+            RunAppleScript($"tell application \"{APP_NAME}\" to activate");
+            System.Threading.Thread.Sleep(500); // 念のための待機
+
             Rectangle bestRect = new Rectangle(0, 0, 0, 0);
             int maxArea = 0;
 
-            // ウィンドウ1〜3までを調べ、一番「面積が大きい」もの（＝メインの本の画面）を探す
-            for (int i = 1; i <= 3; i++)
+            // window 1〜5まで範囲を広げて探す
+            for (int i = 1; i <= 5; i++)
             {
                 try
                 {
+                    // AppleScriptで座標を取得
                     string posStr = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get position of window {i}").Trim();
                     string szStr = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get size of window {i}").Trim();
 
@@ -41,9 +46,9 @@ namespace KindleToPDF.Core
                             int.TryParse(posParts[0], out int x) && int.TryParse(posParts[1], out int y) &&
                             int.TryParse(szParts[0], out int w) && int.TryParse(szParts[1], out int h))
                         {
-                            // 面積を計算
                             int area = w * h;
-                            if (area > maxArea)
+                            // 小さすぎるウィンドウ（スライダーなど）を無視し、最大のものを本編とみなす
+                            if (area > maxArea && w > 300 && h > 300) 
                             {
                                 maxArea = area;
                                 bestRect = new Rectangle(x, y, w, h);
@@ -51,23 +56,16 @@ namespace KindleToPDF.Core
                         }
                     }
                 }
-                catch
-                {
-                    // ウィンドウが存在しない場合のエラーは無視して、次のウィンドウを探す
-                    continue;
-                }
+                catch { continue; }
             }
 
             if (maxArea > 0)
             {
-                // --- 微調整オプション ---
-                // タイトルバーなどが写り込む場合は、ここの数値を 30 などに増やしてください
-                int titleBarHeight = 0; 
-                
-                return new Rectangle(bestRect.X, bestRect.Y + titleBarHeight, bestRect.Width, bestRect.Height - titleBarHeight);
+                // フルスクリーン時はタイトルバーがない場合が多いので titleBarHeight は 0 でOK
+                return bestRect;
             }
 
-            throw new Exception($"Kindleのメインウィンドウが見つかりませんでした。(APP_NAME: {APP_NAME})");
+            throw new Exception($"Kindleのメインウィンドウが見つかりませんでした。Kindleが最小化されていないか確認してください。");
         }
 
         public void BringWindowToFront(IntPtr hWnd)

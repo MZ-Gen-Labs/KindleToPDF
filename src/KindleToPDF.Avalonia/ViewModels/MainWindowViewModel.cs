@@ -23,19 +23,24 @@ public class MainWindowViewModel : ViewModelBase
     // === UIにバインドする設定プロパティ ===
     public string OutputDirectory
     {
-        get => string.IsNullOrEmpty(_settings.OutputDirectory) ? "/tmp" : _settings.OutputDirectory;
+        get => _settings.OutputDirectory;
         set
         {
             _settings.OutputDirectory = value;
             OnPropertyChanged();
+            _settings.Save();
         }
     }
 
-    private string _baseFileName = "KindleBook";
     public string BaseFileName
     {
-        get => _baseFileName;
-        set => SetProperty(ref _baseFileName, value);
+        get => _settings.BaseFileName;
+        set
+        {
+            _settings.BaseFileName = value;
+            OnPropertyChanged();
+            _settings.Save();
+        }
     }
 
     public decimal? IntervalDecimal
@@ -47,6 +52,7 @@ public class MainWindowViewModel : ViewModelBase
             {
                 _settings.Interval = (int)value.Value;
                 OnPropertyChanged();
+                _settings.Save();
             }
         }
     }
@@ -61,6 +67,7 @@ public class MainWindowViewModel : ViewModelBase
                 _settings.PageDirection = 0;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsLeftToRight));
+                _settings.Save();
             }
         }
     }
@@ -75,6 +82,7 @@ public class MainWindowViewModel : ViewModelBase
                 _settings.PageDirection = 1;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsRightToLeft));
+                _settings.Save();
             }
         }
     }

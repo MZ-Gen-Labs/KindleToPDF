@@ -41,6 +41,9 @@ namespace KindleToPDF
                 if (_automation.IsKeyDown(VK_DELETE)) break;
                 token.ThrowIfCancellationRequested();
 
+                _automation.BringWindowToFront(hWnd);
+                await Task.Delay(1000, token); // スペース切り替え等の待機
+                
                 Rectangle bounds = _automation.GetWindowBounds(hWnd);
                 if (bounds.Width <= 0 || bounds.Height <= 0) throw new Exception("Invalid window bounds");
 
