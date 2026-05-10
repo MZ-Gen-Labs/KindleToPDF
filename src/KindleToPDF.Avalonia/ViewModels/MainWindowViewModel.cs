@@ -64,6 +64,21 @@ public class MainWindowViewModel : ViewModelBase
     private int _cropHeight;
     public int CropHeight { get => _cropHeight; set { this.RaiseAndSetIfChanged(ref _cropHeight, value); SaveCurrentSettings(); } }
 
+    private bool _splitDualPage;
+    public bool SplitDualPage { get => _splitDualPage; set { this.RaiseAndSetIfChanged(ref _splitDualPage, value); SaveCurrentSettings(); } }
+
+    private int _colorModeIndex;
+    public int ColorModeIndex { get => _colorModeIndex; set { this.RaiseAndSetIfChanged(ref _colorModeIndex, value); SaveCurrentSettings(); } }
+
+    private int _imageFormatIndex;
+    public int ImageFormatIndex { get => _imageFormatIndex; set { this.RaiseAndSetIfChanged(ref _imageFormatIndex, value); SaveCurrentSettings(); } }
+
+    private int _jpegQuality;
+    public int JpegQuality { get => _jpegQuality; set { this.RaiseAndSetIfChanged(ref _jpegQuality, value); SaveCurrentSettings(); } }
+
+    private int _monochromeThreshold;
+    public int MonochromeThreshold { get => _monochromeThreshold; set { this.RaiseAndSetIfChanged(ref _monochromeThreshold, value); SaveCurrentSettings(); } }
+
     private string _logText = "";
     public string LogText { get => _logText; set => this.RaiseAndSetIfChanged(ref _logText, value); }
 
@@ -95,6 +110,11 @@ public class MainWindowViewModel : ViewModelBase
         _cropTop = _settings.CropRect.Y;
         _cropWidth = _settings.CropRect.Width;
         _cropHeight = _settings.CropRect.Height;
+        _splitDualPage = _settings.SplitDualPage;
+        _colorModeIndex = (int)_settings.ColorMode;
+        _imageFormatIndex = (int)_settings.ImageFormat;
+        _jpegQuality = _settings.JpegQuality;
+        _monochromeThreshold = _settings.MonochromeThreshold;
 
         _captureService.OnLog += msg => 
         {
@@ -128,6 +148,11 @@ public class MainWindowViewModel : ViewModelBase
         _settings.StartNumber = this.StartNumber;
         _settings.NumberDigits = this.NumberDigits;
         _settings.CropRect = new SixLabors.ImageSharp.Rectangle(this.CropLeft, this.CropTop, this.CropWidth, this.CropHeight);
+        _settings.SplitDualPage = this.SplitDualPage;
+        _settings.ColorMode = (ImageColorMode)this.ColorModeIndex;
+        _settings.ImageFormat = (PdfImageFormat)this.ImageFormatIndex;
+        _settings.JpegQuality = this.JpegQuality;
+        _settings.MonochromeThreshold = this.MonochromeThreshold;
         _settings.Save();
     }
 

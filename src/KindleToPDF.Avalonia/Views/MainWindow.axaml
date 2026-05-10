@@ -92,7 +92,44 @@
                         </StackPanel>
                     </Border>
                     
-                    <TextBlock Text="※次回以降、クロップ（範囲指定）やPDFの画質設定機能もここに追加されます。" Foreground="Gray" FontSize="12" Margin="5,10,0,0"/>
+                    <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,15,0,0">
+                        <StackPanel Spacing="15">
+                            <TextBlock Text="画像処理・PDF画質設定:" FontWeight="Bold"/>
+
+                            <CheckBox Content="見開きページを左右に自動分割する (Split Dual Page)" IsChecked="{Binding SplitDualPage}"/>
+
+                            <Grid ColumnDefinitions="140, *" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0">
+                                
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="画像フォーマット:" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Row="0" Grid.Column="1" SelectedIndex="{Binding ImageFormatIndex}" Width="220">
+                                    <ComboBoxItem>JPEG (ファイル容量小)</ComboBoxItem>
+                                    <ComboBoxItem>PNG (画質劣化なし)</ComboBoxItem>
+                                </ComboBox>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="カラーモード:" VerticalAlignment="Center" Margin="0,15,0,0"/>
+                                <ComboBox Grid.Row="1" Grid.Column="1" SelectedIndex="{Binding ColorModeIndex}" Width="220" Margin="0,15,0,0">
+                                    <ComboBoxItem>白黒2値化 (Monochrome)</ComboBoxItem>
+                                    <ComboBoxItem>グレースケール</ComboBoxItem>
+                                    <ComboBoxItem>256色 (Indexed256)</ComboBoxItem>
+                                    <ComboBoxItem>ハイカラー (16-bit)</ComboBoxItem>
+                                    <ComboBoxItem>フルカラー (24-bit)</ComboBoxItem>
+                                </ComboBox>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="JPEG 品質:" VerticalAlignment="Center" Margin="0,15,0,0"/>
+                                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="0,15,0,0">
+                                    <Slider Minimum="10" Maximum="100" Value="{Binding JpegQuality}" Width="150" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                    <TextBlock Text="{Binding JpegQuality}" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="白黒しきい値:" VerticalAlignment="Center" Margin="0,15,0,0"/>
+                                <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="0,15,0,0">
+                                    <Slider Minimum="0" Maximum="255" Value="{Binding MonochromeThreshold}" Width="150" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                    <TextBlock Text="{Binding MonochromeThreshold}" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </TabItem>
             

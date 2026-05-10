@@ -41,6 +41,10 @@ namespace KindleToPDF.Core
         public PdfImageFormat ImageFormat { get; set; } = PdfImageFormat.Jpeg;
         public Rectangle CropRect { get; set; } = new Rectangle(0, 0, 0, 0);
 
+        // ★以下の2行を追加
+        public int JpegQuality { get; set; } = 80;
+        public int MonochromeThreshold { get; set; } = 180;
+
         // --- 設定の保存・読み込みロジック ---
         private static string SettingsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
 
