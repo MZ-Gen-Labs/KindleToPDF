@@ -11,6 +11,7 @@ using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using ReactiveUI;
+using SixLabors.ImageSharp;
 using KindleToPDF.Core; 
 
 namespace KindleToPDF.Avalonia.ViewModels;
@@ -101,6 +102,21 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand ResetCropCommand { get; }
     public ICommand FetchTitleCommand { get; }
 
+    // Manual Capture
+    private bool _isContinuousMode = true;
+    public bool IsContinuousMode { get => _isContinuousMode; set { this.RaiseAndSetIfChanged(ref _isContinuousMode, value); SaveCurrentSettings(); } }
+
+    private bool _isManualMode;
+    public bool IsManualMode { get => _isManualMode; set { this.RaiseAndSetIfChanged(ref _isManualMode, value); SaveCurrentSettings(); } }
+
+    private string _manualCaptureCountText = "Captured: 0 pages";
+    public string ManualCaptureCountText { get => _manualCaptureCountText; set => this.RaiseAndSetIfChanged(ref _manualCaptureCountText, value); }
+
+    public ICommand CapturePageCommand { get; }
+    public ICommand RemoveLastCommand { get; }
+    public ICommand ClearAllCommand { get; }
+    public ICommand ManualCreatePdfCommand { get; }
+
     public MainWindowViewModel(CaptureService captureService, IAutomationLogic automation, AppSettings settings)
     {
         _captureService = captureService;
@@ -136,6 +152,10 @@ public class MainWindowViewModel : ViewModelBase
         };
         _captureService.OnPageCaptured += imgPath => { _capturedImages.Add(imgPath); };
 
+        var savedSettings = AppSettings.Load();
+        _isContinuousMode = savedSettings.CaptureMode == CaptureMode.Continuous;
+        _isManualMode = savedSettings.CaptureMode == CaptureMode.Manual;
+
         StartCommand = ReactiveCommand.CreateFromTask(StartCaptureAsync);
         StopCommand = ReactiveCommand.Create(() => _cts?.Cancel());
         AbortCommand = ReactiveCommand.Create(AbortCapture);
@@ -148,6 +168,11 @@ public class MainWindowViewModel : ViewModelBase
         MinimizeCommand = ReactiveCommand.Create(() => ExecuteNavigation(hWnd => _automation.MinimizeKindleWindow(hWnd), "Minimize"));
         ResetCropCommand = ReactiveCommand.Create(ResetCrop);
         FetchTitleCommand = ReactiveCommand.CreateFromTask(FetchBookTitleAsync);
+
+        CapturePageCommand = ReactiveCommand.CreateFromTask(CaptureManualPageAsync);
+        RemoveLastCommand = ReactiveCommand.Create(RemoveLastCapture);
+        ClearAllCommand = ReactiveCommand.Create(ClearAllCaptures);
+        ManualCreatePdfCommand = ReactiveCommand.CreateFromTask(FinalizeManualPdfAsync);
     }
 
     private void ResetCrop()
@@ -253,6 +278,7 @@ public class MainWindowViewModel : ViewModelBase
         _settings.ImageFormat = (PdfImageFormat)this.ImageFormatIndex;
         _settings.JpegQuality = (int)this.JpegQuality;
         _settings.MonochromeThreshold = (int)this.MonochromeThreshold;
+        _settings.CaptureMode = IsManualMode ? CaptureMode.Manual : CaptureMode.Continuous;
 
         _settings.Save();
     }
@@ -284,6 +310,76 @@ public class MainWindowViewModel : ViewModelBase
             LogText += $"{DateTime.Now:HH:mm:ss} - エラー: Kindleウィンドウが見つかりません。\n";
         }
     }
+
+    private async Task CaptureManualPageAsync()
+    {
+        IntPtr hWnd = _automation.GetKindleWindow();
+        if (hWnd == IntPtr.Zero) { LogText += "Kindleが見つかりません。\n"; return; }
+
+        // キャプチャに映らないよう、一瞬アプリを隠す
+        var mainWindow = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        if (mainWindow != null) mainWindow.IsVisible = false;
+        await Task.Delay(300);
+
+        try
+        {
+            var bounds = _automation.GetWindowBounds(hWnd);
+            using var rawImage = _automation.CaptureWindow(bounds);
+            
+            string tempDir = Path.Combine(Path.GetTempPath(), "KindleToPDF_Temp");
+            if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
+
+            // CaptureServiceの既存ロジックを流用して保存（クロップやカラー適用）
+            // ※ pageIndexとして現在のリスト数を使用
+            int currentIndex = _capturedImages.Count;
+            
+            // 内部で利用するため、CaptureServiceのProcessAndSaveImageをpublicにするか、
+            // 同等の処理をここで実行します（今回は簡略化のため直接保存ロジックを記述）
+            string fileName = $"manual_{currentIndex:D4}.png";
+            string fullPath = Path.Combine(tempDir, fileName);
+            rawImage.SaveAsPng(fullPath); 
+
+            _capturedImages.Add(fullPath);
+            UpdateManualCount();
+            LogText += $"{DateTime.Now:HH:mm:ss} - 手動キャプチャ成功 (Page {_capturedImages.Count})\n";
+        }
+        finally
+        {
+            if (mainWindow != null) mainWindow.IsVisible = true;
+        }
+    }
+
+    private void RemoveLastCapture()
+    {
+        if (_capturedImages.Count == 0) return;
+        string path = _capturedImages[^1];
+        _capturedImages.RemoveAt(_capturedImages.Count - 1);
+        try { if (File.Exists(path)) File.Delete(path); } catch { }
+        UpdateManualCount();
+        LogText += "最後のキャプチャを削除しました。\n";
+    }
+
+    private void ClearAllCaptures()
+    {
+        foreach (var img in _capturedImages) try { File.Delete(img); } catch { }
+        _capturedImages.Clear();
+        UpdateManualCount();
+        LogText += "すべてのキャプチャを破棄しました。\n";
+    }
+
+    private async Task FinalizeManualPdfAsync()
+    {
+        if (_capturedImages.Count == 0) return;
+        await Task.Run(() => {
+            var settings = AppSettings.Load();
+            string pdfPath = Path.Combine(OutputDirectory, $"{BaseFileName}.pdf");
+            new PdfGenerator().CreatePdf(_capturedImages, pdfPath, settings);
+        });
+        LogText += $"🎉 手動作成完了: {BaseFileName}.pdf\n";
+        _automation.BringSelfToFront();
+    }
+
+    private void UpdateManualCount() => ManualCaptureCountText = $"Captured: {_capturedImages.Count} pages";
 
 
     private async Task StartCaptureAsync()

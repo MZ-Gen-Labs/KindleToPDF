@@ -21,6 +21,7 @@ namespace KindleToPDF.Core
         public int PageDirection { get; set; } = 0; // 0:右開き, 1:左開き
         public bool StopAtLastPage { get; set; } = true;
         public bool AutoDetect { get; set; } = true;
+        public CaptureMode CaptureMode { get; set; } = CaptureMode.Continuous;
         
         // 出力設定
         public string OutputDirectory { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);

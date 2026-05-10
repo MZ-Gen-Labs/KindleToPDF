@@ -36,6 +36,27 @@
                     </StackPanel>
 
                     <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Padding="15">
+                        <Grid ColumnDefinitions="*, *">
+                            <RadioButton Grid.Column="0" Content="Continuous Auto Capture" IsChecked="{Binding IsContinuousMode}"/>
+                            <RadioButton Grid.Column="1" Content="Manual Selection Capture" IsChecked="{Binding IsManualMode}"/>
+                        </Grid>
+                    </Border>
+
+                    <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Padding="15" 
+                            IsVisible="{Binding IsManualMode}">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Manual Capture Mode" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding ManualCaptureCountText}" Foreground="Gray"/>
+                            <UniformGrid Columns="2" Rows="2">
+                                <Button Content="Capture Page" Command="{Binding CapturePageCommand}" Margin="5" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                                <Button Content="Create PDF" Command="{Binding ManualCreatePdfCommand}" Background="#28a745" Foreground="White" Margin="5" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                                <Button Content="Remove Last" Command="{Binding RemoveLastCommand}" Margin="5" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                                <Button Content="Clear All" Command="{Binding ClearAllCommand}" Margin="5" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Padding="15">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Kindle Navigation:" FontWeight="Bold"/>
                             <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
