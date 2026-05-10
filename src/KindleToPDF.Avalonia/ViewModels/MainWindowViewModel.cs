@@ -70,6 +70,7 @@ public class MainWindowViewModel : ViewModelBase
     // コマンド
     public ICommand StartCommand { get; }
     public ICommand StopCommand { get; }
+    public ICommand ResetCropCommand { get; }
 
     public MainWindowViewModel(CaptureService captureService, IAutomationLogic automation, AppSettings settings)
     {
@@ -103,6 +104,15 @@ public class MainWindowViewModel : ViewModelBase
 
         StartCommand = ReactiveCommand.CreateFromTask(StartCaptureAsync);
         StopCommand = ReactiveCommand.Create(() => _cts?.Cancel());
+        ResetCropCommand = ReactiveCommand.Create(ResetCrop);
+    }
+
+    private void ResetCrop()
+    {
+        CropLeft = 0;
+        CropTop = 0;
+        CropWidth = 0;
+        CropHeight = 0;
     }
 
     private void SaveCurrentSettings()

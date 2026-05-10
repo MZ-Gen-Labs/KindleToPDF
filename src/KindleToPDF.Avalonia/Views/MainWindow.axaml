@@ -87,6 +87,7 @@
                                 <NumericUpDown Value="{Binding CropWidth}" Width="80" ShowButtonSpinner="False"/>
                                 <TextBlock Text="H:" VerticalAlignment="Center"/>
                                 <NumericUpDown Value="{Binding CropHeight}" Width="80" ShowButtonSpinner="False"/>
+                                <Button Content="Reset" Command="{Binding ResetCropCommand}" Margin="10,0,0,0"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
