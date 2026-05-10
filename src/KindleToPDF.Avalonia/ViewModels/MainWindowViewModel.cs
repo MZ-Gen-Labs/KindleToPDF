@@ -5,8 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
-using KindleToPDF;
-using KindleToPDF.Core;
+using ReactiveUI;
+using KindleToPDF.Core; 
 
 namespace KindleToPDF.Avalonia.ViewModels;
 
@@ -16,86 +16,46 @@ public class MainWindowViewModel : ViewModelBase
     private readonly IAutomationLogic _automation;
     private readonly AppSettings _settings;
     private CancellationTokenSource? _cts;
-
-    // --- キャプチャした画像パスを保持するリスト ---
     private readonly List<string> _capturedImages = new();
 
-    // === UIにバインドする設定プロパティ ===
-    public string OutputDirectory
-    {
-        get => _settings.OutputDirectory;
-        set
-        {
-            _settings.OutputDirectory = value;
-            OnPropertyChanged();
-            _settings.Save();
-        }
-    }
+    // ==========================================
+    // UIバインディング用プロパティ
+    // ==========================================
+    private string _outputDirectory = "";
+    public string OutputDirectory { get => _outputDirectory; set { this.RaiseAndSetIfChanged(ref _outputDirectory, value); SaveCurrentSettings(); } }
 
-    public string BaseFileName
-    {
-        get => _settings.BaseFileName;
-        set
-        {
-            _settings.BaseFileName = value;
-            OnPropertyChanged();
-            _settings.Save();
-        }
-    }
+    private string _baseFileName = "";
+    public string BaseFileName { get => _baseFileName; set { this.RaiseAndSetIfChanged(ref _baseFileName, value); SaveCurrentSettings(); } }
 
-    public decimal? IntervalDecimal
-    {
-        get => (decimal)_settings.Interval;
-        set
-        {
-            if (value.HasValue)
-            {
-                _settings.Interval = (int)value.Value;
-                OnPropertyChanged();
-                _settings.Save();
-            }
-        }
-    }
+    private decimal _interval;
+    public decimal Interval { get => _interval; set { this.RaiseAndSetIfChanged(ref _interval, value); SaveCurrentSettings(); } }
 
-    public bool IsRightToLeft
-    {
-        get => _settings.PageDirection == 0;
-        set
-        {
-            if (value)
-            {
-                _settings.PageDirection = 0;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsLeftToRight));
-                _settings.Save();
-            }
-        }
-    }
+    private bool _isRightToLeft;
+    public bool IsRightToLeft { get => _isRightToLeft; set { this.RaiseAndSetIfChanged(ref _isRightToLeft, value); SaveCurrentSettings(); } }
 
-    public bool IsLeftToRight
-    {
-        get => _settings.PageDirection == 1;
-        set
-        {
-            if (value)
-            {
-                _settings.PageDirection = 1;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsRightToLeft));
-                _settings.Save();
-            }
-        }
-    }
+    // --- 新規追加：詳細設定の復元 ---
+    private int _pageCount;
+    public int PageCount { get => _pageCount; set { this.RaiseAndSetIfChanged(ref _pageCount, value); SaveCurrentSettings(); } }
+
+    private bool _autoDetect;
+    public bool AutoDetect { get => _autoDetect; set { this.RaiseAndSetIfChanged(ref _autoDetect, value); SaveCurrentSettings(); } }
+
+    private bool _stopAtLastPage;
+    public bool StopAtLastPage { get => _stopAtLastPage; set { this.RaiseAndSetIfChanged(ref _stopAtLastPage, value); SaveCurrentSettings(); } }
+
+    private bool _isSequential; // 上書きか連番か
+    public bool IsSequential { get => _isSequential; set { this.RaiseAndSetIfChanged(ref _isSequential, value); SaveCurrentSettings(); } }
+
+    private int _startNumber;
+    public int StartNumber { get => _startNumber; set { this.RaiseAndSetIfChanged(ref _startNumber, value); SaveCurrentSettings(); } }
+
+    private int _numberDigits;
+    public int NumberDigits { get => _numberDigits; set { this.RaiseAndSetIfChanged(ref _numberDigits, value); SaveCurrentSettings(); } }
 
     private string _logText = "";
-    public string LogText
-    {
-        get => _logText;
-        set => SetProperty(ref _logText, value);
-    }
+    public string LogText { get => _logText; set => this.RaiseAndSetIfChanged(ref _logText, value); }
 
-    // ===================================
-
+    // コマンド
     public ICommand StartCommand { get; }
     public ICommand StopCommand { get; }
 
@@ -105,20 +65,45 @@ public class MainWindowViewModel : ViewModelBase
         _automation = automation;
         _settings = settings;
 
+        // 起動時に保存された設定を読み込む
+        _outputDirectory = _settings.OutputDirectory;
+        _baseFileName = _settings.BaseFileName;
+        _interval = _settings.Interval;
+        _isRightToLeft = _settings.PageDirection == 0;
+        
+        // 新規追加分のロード
+        _pageCount = _settings.PageCount;
+        _autoDetect = _settings.AutoDetect;
+        _stopAtLastPage = _settings.StopAtLastPage;
+        _isSequential = _settings.Mode == FileNameMode.Sequential;
+        _startNumber = _settings.StartNumber;
+        _numberDigits = _settings.NumberDigits;
+
         _captureService.OnLog += msg => 
         {
             Dispatcher.UIThread.Post(() => LogText += $"{DateTime.Now:HH:mm:ss} - {msg}\n");
         };
+        _captureService.OnPageCaptured += imgPath => { _capturedImages.Add(imgPath); };
 
-        // 画像がキャプチャされるたびにリストにパスを追加
-        _captureService.OnPageCaptured += imgPath =>
-        {
-            _capturedImages.Add(imgPath);
-        };
-
-        StartCommand = new RelayCommand(async () => await StartCaptureAsync());
-        StopCommand = new RelayCommand(() => _cts?.Cancel());
+        StartCommand = ReactiveCommand.CreateFromTask(StartCaptureAsync);
+        StopCommand = ReactiveCommand.Create(() => _cts?.Cancel());
     }
+
+    private void SaveCurrentSettings()
+    {
+        _settings.OutputDirectory = this.OutputDirectory;
+        _settings.BaseFileName = this.BaseFileName;
+        _settings.Interval = (int)this.Interval;
+        _settings.PageDirection = this.IsRightToLeft ? 0 : 1;
+        _settings.PageCount = this.PageCount;
+        _settings.AutoDetect = this.AutoDetect;
+        _settings.StopAtLastPage = this.StopAtLastPage;
+        _settings.Mode = this.IsSequential ? FileNameMode.Sequential : FileNameMode.Overwrite;
+        _settings.StartNumber = this.StartNumber;
+        _settings.NumberDigits = this.NumberDigits;
+        _settings.Save();
+    }
+
 
     private async Task StartCaptureAsync()
     {
@@ -138,7 +123,7 @@ public class MainWindowViewModel : ViewModelBase
         try
         {
             // UI上の設定をAppSettingsに確実に反映させる
-            _settings.Interval = (int)(IntervalDecimal ?? 1000);
+            _settings.Interval = (int)this.Interval;
             _settings.PageDirection = IsRightToLeft ? 0 : 1;
             // 必要に応じて他の設定（StartNumber等）もここでセット可能
             

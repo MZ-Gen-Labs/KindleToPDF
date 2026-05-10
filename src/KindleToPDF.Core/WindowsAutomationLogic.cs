@@ -14,7 +14,7 @@ using System.Windows.Forms;
 using System.Windows.Automation;
 #endif
 
-namespace KindleToPDF
+namespace KindleToPDF.Core
 {
     /// <summary>
     /// Handles automation of Kindle for PC window interactions

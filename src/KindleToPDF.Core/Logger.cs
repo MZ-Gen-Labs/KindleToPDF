@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace KindleToPDF
+namespace KindleToPDF.Core
 {
     /// <summary>
     /// Centralized logging utility for the application

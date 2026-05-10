@@ -3,7 +3,7 @@ using SixLabors.ImageSharp;
 using Rectangle = SixLabors.ImageSharp.Rectangle;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace KindleToPDF
+namespace KindleToPDF.Core
 {
     /// <summary>
     /// OS固有のウィンドウ操作・画像キャプチャ処理を抽象化するインターフェース

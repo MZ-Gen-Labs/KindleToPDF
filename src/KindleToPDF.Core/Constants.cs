@@ -1,6 +1,6 @@
 using System;
 
-namespace KindleToPDF
+namespace KindleToPDF.Core
 {
     /// <summary>
     /// Application-wide constants

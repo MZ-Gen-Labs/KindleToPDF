@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace KindleToPDF
+namespace KindleToPDF.Core
 {
     public static class FileNameGenerator
     {

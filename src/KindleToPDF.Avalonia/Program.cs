@@ -1,4 +1,5 @@
-﻿using Avalonia;
+using Avalonia;
+using Avalonia.ReactiveUI;
 using System;
 
 namespace KindleToPDF.Avalonia;
@@ -20,5 +21,6 @@ sealed class Program
             .WithDeveloperTools()
 #endif
             .WithInterFont()
+            .UseReactiveUI()
             .LogToTrace();
 }

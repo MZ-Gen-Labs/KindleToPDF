@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+// ※ ImageSharpのRectangleを使うためのエイリアス
+using Rectangle = SixLabors.ImageSharp.Rectangle; 
 
-namespace KindleToPDF
+namespace KindleToPDF.Core
 {
+    // --- 旧Windows版で使っていた列挙型を復元 ---
     public enum FileNameMode { Overwrite, Sequential }
     public enum SequentialType { Number, Alphabet, DateTime }
     public enum CaptureMode { Continuous, Manual }
@@ -15,94 +15,45 @@ namespace KindleToPDF
 
     public class AppSettings
     {
-        public AppSettings()
-        {
-            EnsurePatterns();
-        }
+        // 基本設定
+        public int PageCount { get; set; } = 100;
         public int Interval { get; set; } = 1000;
-        public int PageCount { get; set; } = 10;
-        public bool AutoDetect { get; set; } = true;
+        public int PageDirection { get; set; } = 0; // 0:右開き, 1:左開き
         public bool StopAtLastPage { get; set; } = true;
-        public bool AlwaysOnTop { get; set; } = true;
-        public int DpiIndex { get; set; } = 0;
-        public int PageDirection { get; set; } = 0; // 0: R2L (JP), 1: L2R (EN)
+        public bool AutoDetect { get; set; } = true;
         
-        // Capture Mode
-        public CaptureMode CaptureMode { get; set; } = CaptureMode.Continuous;
-        
-        // Image Compression
-        public ImageColorMode ColorMode { get; set; } = ImageColorMode.Grayscale;
-        public PdfImageFormat ImageFormat { get; set; } = PdfImageFormat.Jpeg;
-        public int JpegQuality { get; set; } = 80; // 60-100
-        public int MonochromeThreshold { get; set; } = 180; // 0-255, default 180 for better text visibility
-        public bool SplitDualPage { get; set; } = false; // Auto-split dual pages
-        
-        // Naming Options
+        // 出力設定
         public string OutputDirectory { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         public string BaseFileName { get; set; } = "KindleBook";
         public FileNameMode Mode { get; set; } = FileNameMode.Sequential;
+        
+        // 連番設定
         public SequentialType SeqType { get; set; } = SequentialType.Number;
         public int StartNumber { get; set; } = 1;
         public int NumberDigits { get; set; } = 3;
-        public string StartChar { get; set; } = "a";
-        public string DateTimeFormat { get; set; } = "yyyyMMdd";
-        
-        public List<Rectangle> CropPatterns { get; set; } = new List<Rectangle>();
-        public int SelectedPatternIndex { get; set; } = 0;
-        public int MaxPatterns { get; set; } = 5;
+        public string StartChar { get; set; } = "A";
+        public string DateTimeFormat { get; set; } = "_yyyyMMdd_HHmmss";
 
-        [JsonIgnore]
-        public Rectangle CropRect
-        {
-            get 
-            {
-                EnsurePatterns();
-                if (SelectedPatternIndex >= 0 && SelectedPatternIndex < CropPatterns.Count)
-                {
-                    return CropPatterns[SelectedPatternIndex];
-                }
-                return Rectangle.Empty;
-            }
-            set
-            {
-                EnsurePatterns();
-                if (SelectedPatternIndex >= 0 && SelectedPatternIndex < CropPatterns.Count)
-                {
-                    CropPatterns[SelectedPatternIndex] = value;
-                }
-            }
-        }
+        // （※将来ステップ用の設定項目も保持しておきます）
+        public int DpiIndex { get; set; } = 0;
+        public bool SplitDualPage { get; set; } = false;
+        public ImageColorMode ColorMode { get; set; } = ImageColorMode.Grayscale;
+        public PdfImageFormat ImageFormat { get; set; } = PdfImageFormat.Jpeg;
+        public Rectangle CropRect { get; set; } = new Rectangle(0, 0, 0, 0);
 
-        public void EnsurePatterns()
-        {
-            if (CropPatterns == null) CropPatterns = new List<Rectangle>();
-            
-            while (CropPatterns.Count < MaxPatterns)
-            {
-                CropPatterns.Add(Rectangle.Empty);
-            }
-            
-            if (SelectedPatternIndex >= MaxPatterns) SelectedPatternIndex = MaxPatterns - 1;
-            if (SelectedPatternIndex < 0) SelectedPatternIndex = 0;
-        }
-
-        private static string SettingsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.SETTINGS_FILE_NAME);
+        // --- 設定の保存・読み込みロジック ---
+        private static string SettingsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
 
         public static AppSettings Load()
         {
-            try
+            if (File.Exists(SettingsPath))
             {
-                if (File.Exists(SettingsPath))
+                try
                 {
                     string json = File.ReadAllText(SettingsPath);
-                    var settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
-                    settings.EnsurePatterns();
-                    return settings;
+                    return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
                 }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"Failed to load settings from {SettingsPath}: {ex.Message}", ex);
+                catch { return new AppSettings(); }
             }
             return new AppSettings();
         }
@@ -116,7 +67,7 @@ namespace KindleToPDF
             }
             catch (Exception ex)
             {
-                Logger.Error($"Failed to save settings to {SettingsPath}: {ex.Message}", ex);
+                Console.WriteLine($"設定の保存に失敗: {ex.Message}");
             }
         }
     }

@@ -1,0 +1,238 @@
+[INFO] [2026-05-09 22:51:55] CreatePdf: Start. Files=26, Out=/Users/miyazawahayato/Documents/temp/KindleBook_001.pdf, Mode=Grayscale, Format=Jpeg, Threshold=180, Split=False, R2L=True
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0000.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0001.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0002.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0003.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0004.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0005.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0006.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0007.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0008.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0009.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0010.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0011.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0012.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0013.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0014.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0015.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0016.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0017.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0018.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0019.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0020.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0021.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0022.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0023.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0024.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Error processing page /Users/miyazawahayato/Documents/temp/page_0025.png: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+Exception: The type initializer for 'Windows.Win32.PInvokeGdiPlus' threw an exception.
+StackTrace:    at Windows.Win32.PInvokeGdiPlus.GdipCreateBitmapFromFile(PCWSTR filename, GpBitmap** bitmap)
+   at System.Drawing.Bitmap..ctor(String filename, Boolean useIcm)
+   at System.Drawing.Bitmap..ctor(String filename)
+   at KindleToPDF.PdfGenerator.ProcessImage(String imagePath, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 196
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 72
+[ERROR] [2026-05-09 22:51:55] Critical error in CreatePdf: Cannot save a PDF document with no pages.
+Exception: Cannot save a PDF document with no pages.
+StackTrace:    at PdfSharp.Pdf.PdfDocument.DoSaveAsync(PdfWriter writer)
+   at PdfSharp.Pdf.PdfDocument.SaveAsync(Stream stream, Boolean closeStream)
+   at PdfSharp.Pdf.PdfDocument.SaveAsync(String path)
+   at PdfSharp.Pdf.PdfDocument.Save(String path)
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 100
+[ERROR] [2026-05-09 22:51:55] Capture/PDF failed
+Exception: Cannot save a PDF document with no pages.
+StackTrace:    at PdfSharp.Pdf.PdfDocument.DoSaveAsync(PdfWriter writer)
+   at PdfSharp.Pdf.PdfDocument.SaveAsync(Stream stream, Boolean closeStream)
+   at PdfSharp.Pdf.PdfDocument.SaveAsync(String path)
+   at PdfSharp.Pdf.PdfDocument.Save(String path)
+   at KindleToPDF.PdfGenerator.CreatePdf(List`1 imagePaths, String outputPdfPath, Double dpi, ImageColorMode colorMode, Int32 jpegQuality, PdfImageFormat format, Int32 monochromeThreshold, Boolean splitDualPage, Boolean isRightToLeft) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/PdfGenerator.cs:line 100
+   at KindleToPDF.Avalonia.ViewModels.MainWindowViewModel.<>c__DisplayClass32_0.<StartCaptureAsync>b__0() in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Avalonia/ViewModels/MainWindowViewModel.cs:line 148
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at KindleToPDF.Avalonia.ViewModels.MainWindowViewModel.StartCaptureAsync() in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Avalonia/ViewModels/MainWindowViewModel.cs:line 145
+[ERROR] [2026-05-09 23:07:51] Capture/PDF failed
+Exception: Kindleウィンドウの座標取得に失敗しました。(AppleScript結果: '')
+APP_NAME 'Kindle' が実際のアプリ名と一致しているか確認してください。
+StackTrace:    at KindleToPDF.Core.MacAutomationLogic.GetWindowBounds(IntPtr hWnd) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/MacAutomationLogic.cs:line 52
+   at KindleToPDF.CaptureService.RunCaptureAsync(IntPtr hWnd, String tempDir, Int32 startIndex, CancellationToken token) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/CaptureService.cs:line 44
+   at KindleToPDF.Avalonia.ViewModels.MainWindowViewModel.StartCaptureAsync() in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Avalonia/ViewModels/MainWindowViewModel.cs:line 136
+[ERROR] [2026-05-09 23:08:17] Capture/PDF failed
+Exception: Kindleウィンドウの座標取得に失敗しました。(AppleScript結果: '')
+APP_NAME 'Kindle' が実際のアプリ名と一致しているか確認してください。
+StackTrace:    at KindleToPDF.Core.MacAutomationLogic.GetWindowBounds(IntPtr hWnd) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/MacAutomationLogic.cs:line 52
+   at KindleToPDF.CaptureService.RunCaptureAsync(IntPtr hWnd, String tempDir, Int32 startIndex, CancellationToken token) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/CaptureService.cs:line 44
+   at KindleToPDF.Avalonia.ViewModels.MainWindowViewModel.StartCaptureAsync() in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Avalonia/ViewModels/MainWindowViewModel.cs:line 136
+[ERROR] [2026-05-10 05:43:54] Capture/PDF failed
+Exception: Kindleウィンドウの座標取得に失敗しました。(AppleScript結果: '')
+APP_NAME 'Kindle' が実際のアプリ名と一致しているか確認してください。
+StackTrace:    at KindleToPDF.Core.MacAutomationLogic.GetWindowBounds(IntPtr hWnd) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/MacAutomationLogic.cs:line 52
+   at KindleToPDF.CaptureService.RunCaptureAsync(IntPtr hWnd, String tempDir, Int32 startIndex, CancellationToken token) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/CaptureService.cs:line 44
+   at KindleToPDF.Avalonia.ViewModels.MainWindowViewModel.StartCaptureAsync() in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Avalonia/ViewModels/MainWindowViewModel.cs:line 136
+[ERROR] [2026-05-10 10:00:14] Capture/PDF failed
+Exception: Kindleのメインウィンドウが見つかりませんでした。(APP_NAME: Kindle)
+StackTrace:    at KindleToPDF.Core.MacAutomationLogic.GetWindowBounds(IntPtr hWnd) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/MacAutomationLogic.cs:line 70
+   at KindleToPDF.CaptureService.RunCaptureAsync(IntPtr hWnd, String tempDir, Int32 startIndex, CancellationToken token) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/CaptureService.cs:line 44
+   at KindleToPDF.Avalonia.ViewModels.MainWindowViewModel.StartCaptureAsync() in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Avalonia/ViewModels/MainWindowViewModel.cs:line 149
+[ERROR] [2026-05-10 10:38:04] Capture/PDF failed
+Exception: Kindleのメインウィンドウが見つかりませんでした。(APP_NAME: Kindle)
+StackTrace:    at KindleToPDF.Core.MacAutomationLogic.GetWindowBounds(IntPtr hWnd) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/MacAutomationLogic.cs:line 70
+   at KindleToPDF.CaptureService.RunCaptureAsync(IntPtr hWnd, String tempDir, Int32 startIndex, CancellationToken token) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/CaptureService.cs:line 44
+   at KindleToPDF.Avalonia.ViewModels.MainWindowViewModel.StartCaptureAsync() in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Avalonia/ViewModels/MainWindowViewModel.cs:line 149
+[ERROR] [2026-05-10 10:48:01] Capture/PDF failed
+Exception: 43:51: execution error: application "KindleToPDF.Avalonia"を取り出すことはできません。 (-1728)
+StackTrace:    at KindleToPDF.Core.MacAutomationLogic.RunAppleScriptWithResult(String script) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/MacAutomationLogic.cs:line 196
+   at KindleToPDF.Core.MacAutomationLogic.RunAppleScript(String script) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/MacAutomationLogic.cs:line 184
+   at KindleToPDF.Core.MacAutomationLogic.BringAppToFront(String appName) in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Core/MacAutomationLogic.cs:line 173
+   at KindleToPDF.Avalonia.ViewModels.MainWindowViewModel.StartCaptureAsync() in /Users/miyazawahayato/git/KindleToPDF/src/KindleToPDF.Avalonia/ViewModels/MainWindowViewModel.cs:line 179

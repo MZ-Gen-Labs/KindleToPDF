@@ -8,7 +8,7 @@ using Rectangle = SixLabors.ImageSharp.Rectangle;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace KindleToPDF
+namespace KindleToPDF.Core
 {
     public class CaptureService
     {
