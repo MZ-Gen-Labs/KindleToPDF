@@ -168,68 +168,42 @@ public class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        LogText += $"設定を確認: 保存先={OutputDirectory}, 間隔={_settings.Interval}ms, 方向={(IsRightToLeft ? "右開き" : "左開き")}\n";
+        // 保存直前の最新設定をロード（UIからの変更を確定させる）
+        var currentSettings = AppSettings.Load();
         
-        _capturedImages.Clear();
+        // リストをリセット
+        _capturedImages.Clear(); 
 
         try
         {
-            // UI上の設定をAppSettingsに確実に反映させる
-            _settings.Interval = (int)this.Interval;
-            _settings.PageDirection = IsRightToLeft ? 0 : 1;
-            // 必要に応じて他の設定（StartNumber等）もここでセット可能
-            
-            // 設定を保存
-            _settings.Save();
-            
-            // 1. キャプチャ実行
+            // CaptureServiceの実行。現在のインスタンスの _settings が更新されていることを確認
             await _captureService.RunCaptureAsync(hWnd, OutputDirectory, 0, _cts.Token);
 
-            // 2. キャプチャ完了後のPDF生成処理
             if (_capturedImages.Count > 0)
             {
-                LogText += "\nキャプチャ完了。PDFの生成を開始します...\n";
-
-                string rawPdfPath = Path.Combine(OutputDirectory, $"{BaseFileName}.pdf");
-                string finalPdfPath = FileNameGenerator.GetOutputFilePath(rawPdfPath, _settings);
-
+                LogText += "PDF生成中...\n";
+                string finalPdfPath = Path.Combine(OutputDirectory, $"{BaseFileName}.pdf");
+                
                 await Task.Run(() => 
                 {
                     var pdfGen = new PdfGenerator();
-                    pdfGen.CreatePdf(_capturedImages, finalPdfPath, _settings); 
+                    pdfGen.CreatePdf(_capturedImages, finalPdfPath, currentSettings); 
                 });
 
-                LogText += $"🎉 PDFの生成が完了しました！\n保存先: {finalPdfPath}\n";
-
-                // 3. 一時画像ファイルの自動削除
-                LogText += "一時画像ファイルをクリーンアップしています...\n";
-                foreach (var imgPath in _capturedImages)
-                {
-                    if (File.Exists(imgPath))
-                    {
-                        try { File.Delete(imgPath); } catch { }
-                    }
-                }
-                LogText += "完了しました！\n";
-                
-                // 自分自身（Avaloniaアプリ）を前面に呼び出す
+                LogText += $"🎉 完了: {finalPdfPath}\n";
                 _automation.BringSelfToFront();
-            }
-            else
-            {
-                LogText += "キャプチャされた画像がありませんでした。\n";
+
+                // 一時ファイルの削除
+                foreach (var img in _capturedImages) File.Delete(img);
             }
         }
         catch (OperationCanceledException)
         {
-            LogText += "キャプチャを停止しました。\n";
-            // 停止された場合でも、それまでに撮った画像があればPDF化するかどうかは悩みどころですが、
-            // 今回はユーザーの要求通りに実装します（キャプチャ完了後のみ実行）。
+            LogText += "停止しました。\n";
         }
         catch (Exception ex)
         {
-            LogText += $"エラー発生: {ex.Message}\n";
-            Logger.Error("Capture/PDF failed", ex);
+            LogText += $"エラー: {ex.Message}\n";
         }
     }
 }

@@ -4,9 +4,10 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp;
-using Rectangle = SixLabors.ImageSharp.Rectangle;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace KindleToPDF.Core
 {
@@ -15,10 +16,8 @@ namespace KindleToPDF.Core
         private readonly IAutomationLogic _automation;
         private readonly AppSettings _settings;
 
-        // UI側に状態を通知するためのイベント
         public event Action<string>? OnLog;
         public event Action<string>? OnPageCaptured;
-        public event Action? OnLastPageDetected;
 
         public CaptureService(IAutomationLogic automation, AppSettings settings)
         {
@@ -26,125 +25,129 @@ namespace KindleToPDF.Core
             _settings = settings;
         }
 
-        public async Task RunCaptureAsync(IntPtr hWnd, string tempDir, int startIndex, CancellationToken token)
+        public async Task RunCaptureAsync(IntPtr hWnd, string outputDir, int startPage, CancellationToken ct)
         {
-            Image<Rgba32>? previousImage = null;
-            const int VK_DELETE = 0x2E;
-            bool isRightToLeft = _settings.PageDirection == 0;
-            int maxPages = _settings.PageCount;
-            bool stopAtLast = _settings.StopAtLastPage;
-            int interval = _settings.Interval;
-            bool autoDetect = _settings.AutoDetect;
+            _automation.BringWindowToFront(hWnd);
+            await Task.Delay(1000, ct); // スペース切り替え待ち
 
-            for (int i = startIndex; i < maxPages || stopAtLast; i++)
+            var bounds = _automation.GetWindowBounds(hWnd);
+            Image<Rgba32>? lastImage = null;
+            int pageIndex = 0;
+
+            for (int i = 0; i < _settings.PageCount; i++)
             {
-                if (_automation.IsKeyDown(VK_DELETE)) break;
-                token.ThrowIfCancellationRequested();
+                if (ct.IsCancellationRequested) break;
 
-                _automation.BringWindowToFront(hWnd);
-                await Task.Delay(1000, token); // スペース切り替え等の待機
+                // 1. キャプチャ
+                using var currentFullImage = _automation.CaptureWindow(bounds);
                 
-                Rectangle bounds = _automation.GetWindowBounds(hWnd);
-                if (bounds.Width <= 0 || bounds.Height <= 0) throw new Exception("Invalid window bounds");
+                // 2. クロップ処理
+                var processedImage = ApplyCrop(currentFullImage);
 
-                Image<Rgba32> rawImage = _automation.CaptureWindow(bounds);
-                Image<Rgba32> currentImage;
-
-                // クロップ処理
-                if (_settings.CropRect.Width > 0 && _settings.CropRect.Height > 0)
+                // 3. 重複チェック（最終ページ判定）
+                if (_settings.StopAtLastPage && lastImage != null)
                 {
-                    int relX = _settings.CropRect.X - bounds.X;
-                    int relY = _settings.CropRect.Y - bounds.Y;
-                    Rectangle relativeCrop = new Rectangle(relX, relY, _settings.CropRect.Width, _settings.CropRect.Height);
-                    currentImage = _automation.CropImage(rawImage, relativeCrop);
-                    rawImage.Dispose();
-                }
-                else
-                {
-                    currentImage = rawImage;
-                }
-
-                // 最終ページ判定
-                if (stopAtLast && previousImage != null)
-                {
-                    if (_automation.AreImagesSame(previousImage, currentImage))
+                    if (_automation.AreImagesSame(lastImage, processedImage))
                     {
-                        OnLog?.Invoke("Last page detected (no change). Stopping.");
-                        currentImage.Dispose();
-                        OnLastPageDetected?.Invoke();
+                        OnLog?.Invoke("最終ページを検出しました。停止します。");
+                        processedImage.Dispose();
                         break;
                     }
                 }
 
-                if (previousImage != null) previousImage.Dispose();
-                previousImage = currentImage.Clone();
+                // 前回の画像を更新
+                lastImage?.Dispose();
+                lastImage = processedImage.Clone();
 
-                // 画像保存
-                string imgPath = Path.Combine(tempDir, $"page_{i:D4}.png");
-                await currentImage.SaveAsPngAsync(imgPath, token);
+                // 4. カラーモード変換・見開き分割・保存
+                ProcessAndSaveImage(processedImage, outputDir, ref pageIndex);
 
-                OnPageCaptured?.Invoke(imgPath);
                 OnLog?.Invoke($"Captured page {i + 1}");
 
-                currentImage.Dispose();
+                // 5. ページめくり
+                _automation.SendNextPage(hWnd, _settings.PageDirection == 0);
+                await Task.Delay(_settings.Interval, ct);
+            }
 
-                if (!stopAtLast && i >= maxPages - 1) break;
+            lastImage?.Dispose();
+        }
 
-                // ページめくり
-                _automation.SendPageTurn(hWnd, isRightToLeft);
+        private Image<Rgba32> ApplyCrop(Image<Rgba32> source)
+        {
+            // UIで設定した CropRect が 0 でなければ切り抜く
+            if (_settings.CropRect.Width > 0 && _settings.CropRect.Height > 0)
+            {
+                return _automation.CropImage(source, _settings.CropRect);
+            }
+            return source.Clone();
+        }
 
-                if (autoDetect)
+        private void ProcessAndSaveImage(Image<Rgba32> image, string outputDir, ref int pageIndex)
+        {
+            // 見開き分割がONの場合
+            if (_settings.SplitDualPage)
+            {
+                int mid = image.Width / 2;
+                
+                // 右開き(和書)なら 右->左 の順、左開き(洋書)なら 左->右 の順
+                if (_settings.PageDirection == 0) // 右開き
                 {
-                    bool pageChanged = false;
-                    int maxRetries = 40;
-                    int stableCount = 0;
-                    Image<Rgba32>? lastCheck = null;
+                    SaveSingleImage(image.Clone(ctx => ctx.Crop(new Rectangle(mid, 0, image.Width - mid, image.Height))), outputDir, ref pageIndex);
+                    SaveSingleImage(image.Clone(ctx => ctx.Crop(new Rectangle(0, 0, mid, image.Height))), outputDir, ref pageIndex);
+                }
+                else // 左開き
+                {
+                    SaveSingleImage(image.Clone(ctx => ctx.Crop(new Rectangle(0, 0, mid, image.Height))), outputDir, ref pageIndex);
+                    SaveSingleImage(image.Clone(ctx => ctx.Crop(new Rectangle(mid, 0, image.Width - mid, image.Height))), outputDir, ref pageIndex);
+                }
+            }
+            else
+            {
+                SaveSingleImage(image.Clone(), outputDir, ref pageIndex);
+            }
+        }
 
-                    for (int r = 0; r < maxRetries; r++)
-                    {
-                        await Task.Delay(100, token);
-                        if (_automation.IsKeyDown(VK_DELETE)) { break; }
-                        token.ThrowIfCancellationRequested();
+        private void SaveSingleImage(Image<Rgba32> image, string outputDir, ref int pageIndex)
+        {
+            using (image)
+            {
+                // カラーモード変換
+                ApplyColorMode(image);
 
-                        Image<Rgba32> currentCheck = _automation.CaptureWindow(bounds);
+                // ファイル名生成 (連番)
+                string fileName = string.Format($"page_{{0:D{_settings.NumberDigits}}}.{(_settings.ImageFormat == PdfImageFormat.Jpeg ? "jpg" : "png")}", 
+                                                _settings.StartNumber + pageIndex);
+                string fullPath = Path.Combine(outputDir, fileName);
 
-                        if (lastCheck != null)
-                        {
-                            if (_automation.AreImagesSame(lastCheck, currentCheck))
-                                stableCount++;
-                            else
-                                stableCount = 0;
-                            lastCheck.Dispose();
-                        }
-                        lastCheck = currentCheck;
-
-                        if (stableCount >= 2)
-                        {
-                            if (!_automation.AreImagesSame(previousImage, currentCheck))
-                            {
-                                pageChanged = true;
-                                lastCheck.Dispose();
-                                lastCheck = null;
-                                break;
-                            }
-                        }
-                    }
-                    if (lastCheck != null) lastCheck.Dispose();
-
-                    if (!pageChanged)
-                        OnLog?.Invoke("Warning: Page turn not detected (timeout or no change).");
+                // フォーマットに応じて保存
+                if (_settings.ImageFormat == PdfImageFormat.Jpeg)
+                {
+                    image.SaveAsJpeg(fullPath, new JpegEncoder { Quality = _settings.JpegQuality });
                 }
                 else
                 {
-                    for (int t = 0; t < interval; t += 100)
-                    {
-                        await Task.Delay(Math.Min(100, interval - t), token);
-                        if (_automation.IsKeyDown(VK_DELETE)) { break; }
-                        token.ThrowIfCancellationRequested();
-                    }
+                    image.SaveAsPng(fullPath);
                 }
+
+                OnPageCaptured?.Invoke(fullPath);
+                pageIndex++;
             }
-            if (previousImage != null) previousImage.Dispose();
+        }
+
+        private void ApplyColorMode(Image<Rgba32> image)
+        {
+            switch (_settings.ColorMode)
+            {
+                case ImageColorMode.Monochrome:
+                    // 白黒2値化 (しきい値をUIから反映)
+                    float threshold = _settings.MonochromeThreshold / 255f;
+                    image.Mutate(x => x.BinaryThreshold(threshold));
+                    break;
+                case ImageColorMode.Grayscale:
+                    image.Mutate(x => x.Grayscale());
+                    break;
+                // 他のモード（Indexedなど）はImageSharpの標準フィルタで対応
+            }
         }
     }
 }
