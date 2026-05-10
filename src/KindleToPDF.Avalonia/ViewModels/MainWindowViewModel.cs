@@ -333,8 +333,11 @@ public class MainWindowViewModel : ViewModelBase
             // 画像が保存されたらリストに追加するイベントを登録
             service.OnPageCaptured += imgPath => _capturedImages.Add(imgPath);
 
+            // pageIndex は現在のリストの数を使用
+            int pageIndex = _capturedImages.Count;
+            
             // クロップ、カラー変換、見開き分割、Outputフォルダへの保存をすべて実行
-            await service.ProcessManualCaptureAsync(rawImage, OutputDirectory, _capturedImages.Count);
+            service.ProcessManualCapture(rawImage, OutputDirectory, ref pageIndex);
 
             UpdateManualCount();
             LogText += $"{DateTime.Now:HH:mm:ss} - 手動キャプチャ成功 (計 {_capturedImages.Count} 枚)\n";

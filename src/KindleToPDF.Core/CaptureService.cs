@@ -60,7 +60,7 @@ namespace KindleToPDF.Core
                 lastImage = processedImage.Clone();
 
                 // 4. カラーモード変換・見開き分割・保存
-                pageIndex = await ProcessAndSaveImageAsync(processedImage, outputDir, pageIndex);
+                ProcessAndSaveImage(processedImage, outputDir, ref pageIndex);
 
                 OnLog?.Invoke($"Captured page {i + 1}");
 
@@ -72,16 +72,20 @@ namespace KindleToPDF.Core
             lastImage?.Dispose();
         }
 
-        // 手動キャプチャから画像処理パイプラインを呼び出すためのメソッド
-        public async Task<int> ProcessManualCaptureAsync(Image<Rgba32> rawImage, string outputDir, int pageIndex)
+        // ★追加: 手動キャプチャから画像処理パイプラインを呼び出すためのメソッド
+        public void ProcessManualCapture(Image<Rgba32> rawImage, string outputDir, ref int pageIndex)
         {
             // 1. クロップ（範囲指定）の適用
-            using (var processedImage = ApplyCrop(rawImage))
-            {
-                // 2. 見開き分割、カラーモード変換、そして指定フォルダへの保存
-                return await ProcessAndSaveImageAsync(processedImage, outputDir, pageIndex);
-            }
+            var processedImage = ApplyCrop(rawImage);
+
+            // 2. 見開き分割、カラーモード変換、そして指定フォルダへの保存
+            ProcessAndSaveImage(processedImage, outputDir, ref pageIndex);
+
+            // メモリ解放
+            processedImage.Dispose();
         }
+
+
 
         private Image<Rgba32> ApplyCrop(Image<Rgba32> source)
         {
@@ -93,7 +97,7 @@ namespace KindleToPDF.Core
             return source.Clone();
         }
 
-        private async Task<int> ProcessAndSaveImageAsync(Image<Rgba32> image, string outputDir, int currentIndex)
+        private void ProcessAndSaveImage(Image<Rgba32> image, string outputDir, ref int currentIndex)
         {
             // 見開き分割がONの場合
             if (_settings.SplitDualPage)
@@ -103,50 +107,46 @@ namespace KindleToPDF.Core
                 // 右開き(和書)なら 右->左 の順、左開き(洋書)なら 左->右 の順
                 if (_settings.PageDirection == 0) // 右開き
                 {
-                    currentIndex = await SaveSingleImageAsync(image.Clone(ctx => ctx.Crop(new Rectangle(mid, 0, image.Width - mid, image.Height))), outputDir, currentIndex);
-                    currentIndex = await SaveSingleImageAsync(image.Clone(ctx => ctx.Crop(new Rectangle(0, 0, mid, image.Height))), outputDir, currentIndex);
+                    SaveSingleImage(image.Clone(ctx => ctx.Crop(new Rectangle(mid, 0, image.Width - mid, image.Height))), outputDir, ref currentIndex);
+                    SaveSingleImage(image.Clone(ctx => ctx.Crop(new Rectangle(0, 0, mid, image.Height))), outputDir, ref currentIndex);
                 }
                 else // 左開き
                 {
-                    currentIndex = await SaveSingleImageAsync(image.Clone(ctx => ctx.Crop(new Rectangle(0, 0, mid, image.Height))), outputDir, currentIndex);
-                    currentIndex = await SaveSingleImageAsync(image.Clone(ctx => ctx.Crop(new Rectangle(mid, 0, image.Width - mid, image.Height))), outputDir, currentIndex);
+                    SaveSingleImage(image.Clone(ctx => ctx.Crop(new Rectangle(0, 0, mid, image.Height))), outputDir, ref currentIndex);
+                    SaveSingleImage(image.Clone(ctx => ctx.Crop(new Rectangle(mid, 0, image.Width - mid, image.Height))), outputDir, ref currentIndex);
                 }
             }
             else
             {
-                currentIndex = await SaveSingleImageAsync(image.Clone(), outputDir, currentIndex);
+                SaveSingleImage(image.Clone(), outputDir, ref currentIndex);
             }
-            return currentIndex;
         }
 
-        private async Task<int> SaveSingleImageAsync(Image<Rgba32> image, string outputDir, int currentIndex)
+        private void SaveSingleImage(Image<Rgba32> image, string outputDir, ref int currentIndex)
         {
-            await Task.Run(() => 
+            using (image)
             {
-                using (image)
+                // カラーモード変換
+                ApplyColorMode(image);
+
+                // ファイル名生成 (連番)
+                string fileName = string.Format($"page_{{0:D{_settings.NumberDigits}}}.{(_settings.ImageFormat == PdfImageFormat.Jpeg ? "jpg" : "png")}", 
+                                                _settings.StartNumber + currentIndex);
+                string fullPath = Path.Combine(outputDir, fileName);
+
+                // フォーマットに応じて保存
+                if (_settings.ImageFormat == PdfImageFormat.Jpeg)
                 {
-                    // カラーモード変換
-                    ApplyColorMode(image);
-
-                    // ファイル名生成 (連番)
-                    string fileName = string.Format($"page_{{0:D{_settings.NumberDigits}}}.{(_settings.ImageFormat == PdfImageFormat.Jpeg ? "jpg" : "png")}", 
-                                                    _settings.StartNumber + currentIndex);
-                    string fullPath = Path.Combine(outputDir, fileName);
-
-                    // フォーマットに応じて保存
-                    if (_settings.ImageFormat == PdfImageFormat.Jpeg)
-                    {
-                        image.SaveAsJpeg(fullPath, new JpegEncoder { Quality = _settings.JpegQuality });
-                    }
-                    else
-                    {
-                        image.SaveAsPng(fullPath);
-                    }
-
-                    OnPageCaptured?.Invoke(fullPath);
+                    image.SaveAsJpeg(fullPath, new JpegEncoder { Quality = _settings.JpegQuality });
                 }
-            });
-            return currentIndex + 1;
+                else
+                {
+                    image.SaveAsPng(fullPath);
+                }
+
+                OnPageCaptured?.Invoke(fullPath);
+                currentIndex++;
+            }
         }
 
         private void ApplyColorMode(Image<Rgba32> image)
