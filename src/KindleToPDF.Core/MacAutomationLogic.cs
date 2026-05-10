@@ -162,47 +162,41 @@ namespace KindleToPDF.Core
         
         public string? GetBookTitleFromWindow(IntPtr hWnd)
         {
-            // キャプチャ時と同様に、一番大きい（本が表示されている）ウィンドウを特定する
-            int bestIndex = 1;
-            int maxArea = 0;
+            string bestTitle = "";
 
+            // ウィンドウ1〜5まで、持っている名前をすべて調べる
             for (int i = 1; i <= 5; i++)
             {
                 try
                 {
-                    string szStr = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get size of window {i}").Trim();
-                    if (!string.IsNullOrEmpty(szStr))
+                    string title = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get name of window {i}").Trim();
+                    
+                    // "Kindle" や空文字以外の具体的な名前が見つかったら、それが書籍名である可能性が極めて高い
+                    if (!string.IsNullOrEmpty(title) && title.ToLower() != "kindle" && title.ToLower() != "item 1")
                     {
-                        var szParts = szStr.Split(',');
-                        if (szParts.Length == 2 && int.TryParse(szParts[0], out int w) && int.TryParse(szParts[1], out int h))
-                        {
-                            int area = w * h;
-                            if (area > maxArea && w > 300 && h > 300)
-                            {
-                                maxArea = area;
-                                bestIndex = i;
-                            }
-                        }
+                        bestTitle = title;
+                        break; // 書籍名らしきものが見つかったらループ終了
                     }
                 }
                 catch { continue; }
             }
 
-            // 特定したウィンドウの名前を取得
-            string title = RunAppleScriptWithResult($"tell application \"System Events\" to tell process \"{APP_NAME}\" to get name of window {bestIndex}").Trim();
-            
-            if (string.IsNullOrEmpty(title)) return "Kindle_Book";
-
-            // Mac版Kindle特有の末尾（" - Kindle"）などを削除
-            title = title.Replace(" - Kindle", "").Replace("- Kindle", "").Trim();
-
-            // ファイル名に使用できない禁止文字をアンダースコアに置換
-            foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+            // どうしても見つからなかった場合の保険
+            if (string.IsNullOrEmpty(bestTitle)) 
             {
-                title = title.Replace(c, '_');
+                return "Kindle_Book";
             }
 
-            return title;
+            // Mac版Kindle特有の末尾（" - Kindle"）などを削除
+            bestTitle = bestTitle.Replace(" - Kindle", "").Replace("- Kindle", "").Trim();
+
+            // ファイル名に使用できない禁止文字（\ / : * ? " < > | など）をアンダースコアに置換
+            foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+            {
+                bestTitle = bestTitle.Replace(c, '_');
+            }
+
+            return bestTitle;
         }
 
         public void BringSelfToFront()
