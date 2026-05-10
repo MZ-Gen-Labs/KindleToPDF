@@ -90,6 +90,14 @@ public class MainWindowViewModel : ViewModelBase
     // コマンド
     public ICommand StartCommand { get; }
     public ICommand StopCommand { get; }
+    public ICommand AbortCommand { get; }
+    public ICommand TopCommand { get; }
+    public ICommand PrevCommand { get; }
+    public ICommand NextCommand { get; }
+    public ICommand BottomCommand { get; }
+    public ICommand FullScreenCommand { get; }
+    public ICommand MaximizeCommand { get; }
+    public ICommand MinimizeCommand { get; }
     public ICommand ResetCropCommand { get; }
     public ICommand FetchTitleCommand { get; }
 
@@ -130,6 +138,14 @@ public class MainWindowViewModel : ViewModelBase
 
         StartCommand = ReactiveCommand.CreateFromTask(StartCaptureAsync);
         StopCommand = ReactiveCommand.Create(() => _cts?.Cancel());
+        AbortCommand = ReactiveCommand.Create(AbortCapture);
+        TopCommand = ReactiveCommand.Create(() => ExecuteNavigation(hWnd => _automation.SendHome(hWnd), "Top"));
+        PrevCommand = ReactiveCommand.Create(() => ExecuteNavigation(hWnd => _automation.SendPrevPage(hWnd, IsRightToLeft), "Prev Page"));
+        NextCommand = ReactiveCommand.Create(() => ExecuteNavigation(hWnd => _automation.SendNextPage(hWnd, IsRightToLeft), "Next Page"));
+        BottomCommand = ReactiveCommand.Create(() => ExecuteNavigation(hWnd => _automation.GoToLastPage(hWnd), "Bottom"));
+        FullScreenCommand = ReactiveCommand.Create(() => ExecuteNavigation(hWnd => _automation.ToggleFullScreen(hWnd), "Full Screen"));
+        MaximizeCommand = ReactiveCommand.Create(() => ExecuteNavigation(hWnd => _automation.MaximizeKindleWindow(hWnd), "Maximize"));
+        MinimizeCommand = ReactiveCommand.Create(() => ExecuteNavigation(hWnd => _automation.MinimizeKindleWindow(hWnd), "Minimize"));
         ResetCropCommand = ReactiveCommand.Create(ResetCrop);
         FetchTitleCommand = ReactiveCommand.CreateFromTask(FetchBookTitleAsync);
     }
@@ -225,22 +241,48 @@ public class MainWindowViewModel : ViewModelBase
     private void SaveCurrentSettings()
     {
         _settings.OutputDirectory = this.OutputDirectory;
-        _settings.BaseFileName = this.BaseFileName;
         _settings.Interval = (int)this.Interval;
+        _settings.PageCount = (int)this.PageCount;
         _settings.PageDirection = this.IsRightToLeft ? 0 : 1;
-        _settings.PageCount = this.PageCount;
-        _settings.AutoDetect = this.AutoDetect;
         _settings.StopAtLastPage = this.StopAtLastPage;
-        _settings.Mode = this.IsSequential ? FileNameMode.Sequential : FileNameMode.Overwrite;
-        _settings.StartNumber = this.StartNumber;
-        _settings.NumberDigits = this.NumberDigits;
-        _settings.CropRect = new SixLabors.ImageSharp.Rectangle(this.CropLeft, this.CropTop, this.CropWidth, this.CropHeight);
+        _settings.BaseFileName = this.BaseFileName;
+        _settings.NumberDigits = (int)this.NumberDigits;
+        _settings.StartNumber = (int)this.StartNumber;
         _settings.SplitDualPage = this.SplitDualPage;
         _settings.ColorMode = (ImageColorMode)this.ColorModeIndex;
         _settings.ImageFormat = (PdfImageFormat)this.ImageFormatIndex;
-        _settings.JpegQuality = this.JpegQuality;
-        _settings.MonochromeThreshold = this.MonochromeThreshold;
+        _settings.JpegQuality = (int)this.JpegQuality;
+        _settings.MonochromeThreshold = (int)this.MonochromeThreshold;
+
         _settings.Save();
+    }
+
+    private void AbortCapture()
+    {
+        LogText += $"{DateTime.Now:HH:mm:ss} - 処理を中止 (Abort) し、キャプチャした画像を破棄します。\n";
+        
+        _cts?.Cancel();
+        
+        foreach (var img in _capturedImages)
+        {
+            try { if (File.Exists(img)) File.Delete(img); } catch { }
+        }
+        _capturedImages.Clear();
+    }
+
+    private void ExecuteNavigation(Action<IntPtr> navigationAction, string actionName)
+    {
+        IntPtr hWnd = _automation.GetKindleWindow();
+        if (hWnd != IntPtr.Zero)
+        {
+            _automation.BringWindowToFront(hWnd);
+            navigationAction(hWnd);
+            LogText += $"{DateTime.Now:HH:mm:ss} - Navigation: {actionName} コマンドを送信しました。\n";
+        }
+        else
+        {
+            LogText += $"{DateTime.Now:HH:mm:ss} - エラー: Kindleウィンドウが見つかりません。\n";
+        }
     }
 
 

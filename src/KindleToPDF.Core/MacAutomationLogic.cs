@@ -211,11 +211,61 @@ namespace KindleToPDF.Core
             RunAppleScript(script);
         }
 
-        public void SendHome(IntPtr hWnd) { }
-        public void GoToLastPage(IntPtr hWnd) { }
-        public void MaximizeKindleWindow(IntPtr hWnd) { }
-        public void MinimizeKindleWindow(IntPtr hWnd) { }
-        public void ToggleFullScreen(IntPtr hWnd) { }
+        public void SendHome(IntPtr hWnd)
+        {
+            string script = $@"
+                tell application ""{APP_NAME}"" to activate
+                delay 0.3
+                tell application ""System Events""
+                    key code 115 -- Home key
+                end tell
+            ";
+            RunAppleScript(script);
+        }
+
+        public void GoToLastPage(IntPtr hWnd)
+        {
+            string script = $@"
+                tell application ""{APP_NAME}"" to activate
+                delay 0.3
+                tell application ""System Events""
+                    key code 119 -- End key
+                end tell
+            ";
+            RunAppleScript(script);
+        }
+
+        public void MaximizeKindleWindow(IntPtr hWnd)
+        {
+            string script = $@"
+                tell application ""System Events"" to tell process ""{APP_NAME}""
+                    set zoomed of window 1 to true
+                end tell
+            ";
+            RunAppleScript(script);
+        }
+
+        public void MinimizeKindleWindow(IntPtr hWnd)
+        {
+            string script = $@"
+                tell application ""System Events"" to tell process ""{APP_NAME}""
+                    set miniaturized of window 1 to true
+                end tell
+            ";
+            RunAppleScript(script);
+        }
+
+        public void ToggleFullScreen(IntPtr hWnd)
+        {
+            string script = $@"
+                tell application ""{APP_NAME}"" to activate
+                delay 0.3
+                tell application ""System Events""
+                    keystroke ""f"" using {{command down, control down}}
+                end tell
+            ";
+            RunAppleScript(script);
+        }
 
         private void RunAppleScript(string script)
         {
