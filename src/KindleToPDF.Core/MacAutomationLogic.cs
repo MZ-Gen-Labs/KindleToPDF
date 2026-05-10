@@ -167,6 +167,18 @@ namespace KindleToPDF.Core
             return string.IsNullOrEmpty(title) ? "Kindle_Book" : title;
         }
 
+        public void BringSelfToFront()
+        {
+            // 現在のプロセスのPIDを取得
+            int pid = Process.GetCurrentProcess().Id;
+            
+            // PIDを指定して、そのプロセスを前面(frontmost)にするAppleScriptを実行
+            // これによりアプリ名が何であっても確実に自分を前面に出せます
+            string script = $"tell application \"System Events\" to set frontmost of the first process whose unix id is {pid} to true";
+            
+            RunAppleScript(script);
+        }
+
         public void SendHome(IntPtr hWnd) { }
         public void GoToLastPage(IntPtr hWnd) { }
         public void MaximizeKindleWindow(IntPtr hWnd) { }

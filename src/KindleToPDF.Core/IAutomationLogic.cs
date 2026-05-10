@@ -18,6 +18,7 @@ namespace KindleToPDF
         void MinimizeKindleWindow(IntPtr hWnd);
         void ToggleFullScreen(IntPtr hWnd);
         string? GetBookTitleFromWindow(IntPtr hWnd);
+        void BringSelfToFront();
 
         // Kindle操作関連
         void SendHome(IntPtr hWnd);

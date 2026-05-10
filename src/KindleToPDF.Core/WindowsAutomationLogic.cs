@@ -974,6 +974,8 @@ namespace KindleToPDF
 
             return null;
         }
+
+        public void BringSelfToFront() { }
         /// <summary>
         /// Gets the total page count from the Kindle "Go to" dialog
         /// </summary>

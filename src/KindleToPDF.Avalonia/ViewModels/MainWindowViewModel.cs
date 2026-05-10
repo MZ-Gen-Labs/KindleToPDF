@@ -174,6 +174,9 @@ public class MainWindowViewModel : ViewModelBase
                     }
                 }
                 LogText += "完了しました！\n";
+                
+                // 自分自身（Avaloniaアプリ）を前面に呼び出す
+                _automation.BringSelfToFront();
             }
             else
             {
