@@ -73,6 +73,23 @@
 
                         </Grid>
                     </Border>
+
+                    <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,15,0,0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="キャプチャ範囲 (Crop):" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <Button Content="画面から範囲を選択" Click="OnSetCropAreaClick"/>
+                                <TextBlock Text="X:" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                <NumericUpDown Value="{Binding CropLeft}" Width="80" ShowButtonSpinner="False"/>
+                                <TextBlock Text="Y:" VerticalAlignment="Center"/>
+                                <NumericUpDown Value="{Binding CropTop}" Width="80" ShowButtonSpinner="False"/>
+                                <TextBlock Text="W:" VerticalAlignment="Center"/>
+                                <NumericUpDown Value="{Binding CropWidth}" Width="80" ShowButtonSpinner="False"/>
+                                <TextBlock Text="H:" VerticalAlignment="Center"/>
+                                <NumericUpDown Value="{Binding CropHeight}" Width="80" ShowButtonSpinner="False"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                     
                     <TextBlock Text="※次回以降、クロップ（範囲指定）やPDFの画質設定機能もここに追加されます。" Foreground="Gray" FontSize="12" Margin="5,10,0,0"/>
                 </StackPanel>

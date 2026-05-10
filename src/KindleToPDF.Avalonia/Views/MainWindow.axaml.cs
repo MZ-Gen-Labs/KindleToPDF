@@ -36,4 +36,27 @@ public partial class MainWindow : Window
             }
         }
     }
+
+    private async void OnSetCropAreaClick(object sender, RoutedEventArgs e)
+    {
+        // 1. 設定画面が邪魔にならないよう、一時的に最小化する
+        this.WindowState = WindowState.Minimized;
+        await Task.Delay(300); // 最小化アニメーションを待つ
+
+        // 2. 透過ウィンドウを開く
+        var overlay = new CropOverlayWindow();
+        await overlay.ShowDialog(this);
+
+        // 3. 終わったら設定画面を元に戻す
+        this.WindowState = WindowState.Normal;
+
+        // 4. 取得した座標を ViewModel に渡す
+        if (overlay.ResultRect.Width > 0 && DataContext is MainWindowViewModel vm)
+        {
+            vm.CropLeft = overlay.ResultRect.X;
+            vm.CropTop = overlay.ResultRect.Y;
+            vm.CropWidth = overlay.ResultRect.Width;
+            vm.CropHeight = overlay.ResultRect.Height;
+        }
+    }
 }

@@ -1,0 +1,29 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="KindleToPDF.Avalonia.Views.CropOverlayWindow"
+        Title="Select Crop Area"
+        Background="#40000000"
+        TransparencyLevelHint="Transparent"
+        Topmost="True"
+        WindowState="FullScreen"
+        SystemDecorations="None"
+        Cursor="Cross">
+    
+    <Canvas Name="DrawCanvas" Background="Transparent" 
+            PointerPressed="OnPointerPressed"
+            PointerMoved="OnPointerMoved"
+            PointerReleased="OnPointerReleased">
+        
+        <Border Name="SelectionBorder" 
+                BorderBrush="Red" 
+                BorderThickness="2" 
+                Background="#20FF0000"
+                IsVisible="False" />
+                
+        <TextBlock Name="HintText" 
+                   Text="ドラッグしてキャプチャ範囲を選択してください (ESCキーでキャンセル)" 
+                   Foreground="White" FontSize="24" FontWeight="Bold"
+                   Canvas.Top="50" Canvas.Left="50" 
+                   IsHitTestVisible="False"/>
+    </Canvas>
+</Window>

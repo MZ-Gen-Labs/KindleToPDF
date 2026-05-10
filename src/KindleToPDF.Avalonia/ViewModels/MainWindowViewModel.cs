@@ -52,6 +52,18 @@ public class MainWindowViewModel : ViewModelBase
     private int _numberDigits;
     public int NumberDigits { get => _numberDigits; set { this.RaiseAndSetIfChanged(ref _numberDigits, value); SaveCurrentSettings(); } }
 
+    private int _cropLeft;
+    public int CropLeft { get => _cropLeft; set { this.RaiseAndSetIfChanged(ref _cropLeft, value); SaveCurrentSettings(); } }
+    
+    private int _cropTop;
+    public int CropTop { get => _cropTop; set { this.RaiseAndSetIfChanged(ref _cropTop, value); SaveCurrentSettings(); } }
+
+    private int _cropWidth;
+    public int CropWidth { get => _cropWidth; set { this.RaiseAndSetIfChanged(ref _cropWidth, value); SaveCurrentSettings(); } }
+
+    private int _cropHeight;
+    public int CropHeight { get => _cropHeight; set { this.RaiseAndSetIfChanged(ref _cropHeight, value); SaveCurrentSettings(); } }
+
     private string _logText = "";
     public string LogText { get => _logText; set => this.RaiseAndSetIfChanged(ref _logText, value); }
 
@@ -78,6 +90,10 @@ public class MainWindowViewModel : ViewModelBase
         _isSequential = _settings.Mode == FileNameMode.Sequential;
         _startNumber = _settings.StartNumber;
         _numberDigits = _settings.NumberDigits;
+        _cropLeft = _settings.CropRect.X;
+        _cropTop = _settings.CropRect.Y;
+        _cropWidth = _settings.CropRect.Width;
+        _cropHeight = _settings.CropRect.Height;
 
         _captureService.OnLog += msg => 
         {
@@ -101,6 +117,7 @@ public class MainWindowViewModel : ViewModelBase
         _settings.Mode = this.IsSequential ? FileNameMode.Sequential : FileNameMode.Overwrite;
         _settings.StartNumber = this.StartNumber;
         _settings.NumberDigits = this.NumberDigits;
+        _settings.CropRect = new SixLabors.ImageSharp.Rectangle(this.CropLeft, this.CropTop, this.CropWidth, this.CropHeight);
         _settings.Save();
     }
 
