@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using ReactiveUI;
 using KindleToPDF.Core; 
@@ -126,7 +131,7 @@ public class MainWindowViewModel : ViewModelBase
         StartCommand = ReactiveCommand.CreateFromTask(StartCaptureAsync);
         StopCommand = ReactiveCommand.Create(() => _cts?.Cancel());
         ResetCropCommand = ReactiveCommand.Create(ResetCrop);
-        FetchTitleCommand = ReactiveCommand.Create(FetchBookTitle);
+        FetchTitleCommand = ReactiveCommand.CreateFromTask(FetchBookTitleAsync);
     }
 
     private void ResetCrop()
@@ -137,22 +142,84 @@ public class MainWindowViewModel : ViewModelBase
         CropHeight = 0;
     }
 
-    private void FetchBookTitle()
+    private async Task FetchBookTitleAsync()
     {
-        IntPtr hWnd = _automation.GetKindleWindow();
-        if (hWnd != IntPtr.Zero)
+        try
         {
-            string? title = _automation.GetBookTitleFromWindow(hWnd);
+            // Avaloniaの機能を使ってOSのクリップボードを取得
+            var clipboard = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.Clipboard;
+            if (clipboard == null)
+            {
+                LogText += $"{DateTime.Now:HH:mm:ss} - クリップボードにアクセスできません。\n";
+                return;
+            }
+
+            // クリップボードのテキストを取得
+            string? text = await clipboard.GetTextAsync();
+            
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                LogText += $"{DateTime.Now:HH:mm:ss} - クリップボードが空です。Kindleで本文を少しコピーしてから実行してください。\n";
+                return;
+            }
+
+            // 抽出ロジックの呼び出し
+            string? title = ExtractTitleFromClipboardText(text);
+
             if (!string.IsNullOrEmpty(title))
             {
                 BaseFileName = title; // UIのテキストボックスを更新
-                LogText += $"{DateTime.Now:HH:mm:ss} - 本のタイトルを取得しました: {title}\n";
+                SaveCurrentSettings(); // 設定ファイルにも保存
+                LogText += $"{DateTime.Now:HH:mm:ss} - クリップボードからタイトルを抽出しました: {title}\n";
+            }
+            else
+            {
+                LogText += $"{DateTime.Now:HH:mm:ss} - タイトルを抽出できませんでした。Kindleで本文を少しコピーしてから再度お試しください。\n";
             }
         }
-        else
+        catch (Exception ex)
         {
-            LogText += $"{DateTime.Now:HH:mm:ss} - Kindleが見つからないためタイトルを取得できません。\n";
+            LogText += $"{DateTime.Now:HH:mm:ss} - タイトル取得中にエラーが発生しました: {ex.Message}\n";
         }
+    }
+
+    private string? ExtractTitleFromClipboardText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return null;
+
+        // 複数行コピーされた場合、Kindleは「最後の行」に引用情報を付与する
+        var lines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var lastLine = lines.LastOrDefault();
+
+        if (lastLine == null || !lastLine.Contains("Kindle")) return null;
+
+        // 例: "夏目漱石. 吾輩は猫である (Kindle の位置No.12-13). Publisher. Kindle 版."
+        // 最初の「. 」と「 (Kindle」の間にあるのが書籍名
+        int firstDotIndex = lastLine.IndexOf(". ");
+        if (firstDotIndex == -1) return null;
+
+        int startIndex = firstDotIndex + 2;
+        int endIndex = lastLine.IndexOf(" (Kindle", startIndex);
+        
+        if (endIndex == -1)
+        {
+            // "(Kindle の位置..." がない場合は次のピリオドまでとする
+            endIndex = lastLine.IndexOf(". ", startIndex);
+        }
+
+        if (endIndex != -1 && endIndex > startIndex)
+        {
+            string title = lastLine.Substring(startIndex, endIndex - startIndex).Trim();
+            
+            // ファイル名に使用できない禁止文字（\ / : * ? " < > | など）をアンダースコアに置換
+            foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+            {
+                title = title.Replace(c, '_');
+            }
+            return title;
+        }
+
+        return null;
     }
 
     private void SaveCurrentSettings()
