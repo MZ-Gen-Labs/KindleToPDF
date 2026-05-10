@@ -86,6 +86,7 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand StartCommand { get; }
     public ICommand StopCommand { get; }
     public ICommand ResetCropCommand { get; }
+    public ICommand FetchTitleCommand { get; }
 
     public MainWindowViewModel(CaptureService captureService, IAutomationLogic automation, AppSettings settings)
     {
@@ -125,6 +126,7 @@ public class MainWindowViewModel : ViewModelBase
         StartCommand = ReactiveCommand.CreateFromTask(StartCaptureAsync);
         StopCommand = ReactiveCommand.Create(() => _cts?.Cancel());
         ResetCropCommand = ReactiveCommand.Create(ResetCrop);
+        FetchTitleCommand = ReactiveCommand.Create(FetchBookTitle);
     }
 
     private void ResetCrop()
@@ -133,6 +135,24 @@ public class MainWindowViewModel : ViewModelBase
         CropTop = 0;
         CropWidth = 0;
         CropHeight = 0;
+    }
+
+    private void FetchBookTitle()
+    {
+        IntPtr hWnd = _automation.GetKindleWindow();
+        if (hWnd != IntPtr.Zero)
+        {
+            string? title = _automation.GetBookTitleFromWindow(hWnd);
+            if (!string.IsNullOrEmpty(title))
+            {
+                BaseFileName = title; // UIのテキストボックスを更新
+                LogText += $"{DateTime.Now:HH:mm:ss} - 本のタイトルを取得しました: {title}\n";
+            }
+        }
+        else
+        {
+            LogText += $"{DateTime.Now:HH:mm:ss} - Kindleが見つからないためタイトルを取得できません。\n";
+        }
     }
 
     private void SaveCurrentSettings()
