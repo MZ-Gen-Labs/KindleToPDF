@@ -326,22 +326,22 @@ public class MainWindowViewModel : ViewModelBase
             var bounds = _automation.GetWindowBounds(hWnd);
             using var rawImage = _automation.CaptureWindow(bounds);
             
-            string tempDir = Path.Combine(Path.GetTempPath(), "KindleToPDF_Temp");
-            if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
-
-            // CaptureServiceの既存ロジックを流用して保存（クロップやカラー適用）
-            // ※ pageIndexとして現在のリスト数を使用
-            int currentIndex = _capturedImages.Count;
+            // --- ★修正: Tempフォルダではなく、CaptureServiceの正規パイプラインを通す ---
+            var currentSettings = AppSettings.Load();
+            var service = new CaptureService(_automation, currentSettings);
             
-            // 内部で利用するため、CaptureServiceのProcessAndSaveImageをpublicにするか、
-            // 同等の処理をここで実行します（今回は簡略化のため直接保存ロジックを記述）
-            string fileName = $"manual_{currentIndex:D4}.png";
-            string fullPath = Path.Combine(tempDir, fileName);
-            rawImage.SaveAsPng(fullPath); 
+            // 画像が保存されたらリストに追加するイベントを登録
+            service.OnPageCaptured += imgPath => _capturedImages.Add(imgPath);
 
-            _capturedImages.Add(fullPath);
+            // クロップ、カラー変換、見開き分割、Outputフォルダへの保存をすべて実行
+            await service.ProcessManualCaptureAsync(rawImage, OutputDirectory, _capturedImages.Count);
+
             UpdateManualCount();
-            LogText += $"{DateTime.Now:HH:mm:ss} - 手動キャプチャ成功 (Page {_capturedImages.Count})\n";
+            LogText += $"{DateTime.Now:HH:mm:ss} - 手動キャプチャ成功 (計 {_capturedImages.Count} 枚)\n";
+        }
+        catch (Exception ex)
+        {
+            LogText += $"エラー: {ex.Message}\n";
         }
         finally
         {
@@ -370,13 +370,22 @@ public class MainWindowViewModel : ViewModelBase
     private async Task FinalizeManualPdfAsync()
     {
         if (_capturedImages.Count == 0) return;
+        
+        LogText += $"{DateTime.Now:HH:mm:ss} - PDFを生成中...\n";
+        
         await Task.Run(() => {
             var settings = AppSettings.Load();
             string pdfPath = Path.Combine(OutputDirectory, $"{BaseFileName}.pdf");
             new PdfGenerator().CreatePdf(_capturedImages, pdfPath, settings);
         });
+        
         LogText += $"🎉 手動作成完了: {BaseFileName}.pdf\n";
         _automation.BringSelfToFront();
+
+        // ★追加: 自動モードと同様に、PDF化が終わったら元の画像を消してリセットする
+        foreach (var img in _capturedImages) { try { File.Delete(img); } catch { } }
+        _capturedImages.Clear();
+        UpdateManualCount();
     }
 
     private void UpdateManualCount() => ManualCaptureCountText = $"Captured: {_capturedImages.Count} pages";

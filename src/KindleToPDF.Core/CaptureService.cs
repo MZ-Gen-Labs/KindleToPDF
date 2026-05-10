@@ -72,6 +72,17 @@ namespace KindleToPDF.Core
             lastImage?.Dispose();
         }
 
+        // 手動キャプチャから画像処理パイプラインを呼び出すためのメソッド
+        public async Task<int> ProcessManualCaptureAsync(Image<Rgba32> rawImage, string outputDir, int pageIndex)
+        {
+            // 1. クロップ（範囲指定）の適用
+            using (var processedImage = ApplyCrop(rawImage))
+            {
+                // 2. 見開き分割、カラーモード変換、そして指定フォルダへの保存
+                return await ProcessAndSaveImageAsync(processedImage, outputDir, pageIndex);
+            }
+        }
+
         private Image<Rgba32> ApplyCrop(Image<Rgba32> source)
         {
             // UIで設定した CropRect が 0 でなければ切り抜く
